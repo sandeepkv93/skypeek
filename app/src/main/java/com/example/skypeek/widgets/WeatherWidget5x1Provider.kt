@@ -64,18 +64,37 @@ class WeatherWidget5x1Provider : AppWidgetProvider() {
             setTextViewText(R.id.widget_temperature, "--°")
             setTextViewText(R.id.widget_condition, "Getting weather...")
             setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
+            // Clear any previous hourly data
+            setTextViewText(R.id.widget_hour1_time, "--")
+            setTextViewText(R.id.widget_hour1_temp, "--°")
+            setTextViewText(R.id.widget_hour2_time, "--")
+            setTextViewText(R.id.widget_hour2_temp, "--°")
+            setTextViewText(R.id.widget_hour3_time, "--")
+            setTextViewText(R.id.widget_hour3_temp, "--°")
+            setImageViewResource(R.id.widget_hour1_icon, R.drawable.ic_cloudy)
+            setImageViewResource(R.id.widget_hour2_icon, R.drawable.ic_cloudy)
+            setImageViewResource(R.id.widget_hour3_icon, R.drawable.ic_cloudy)
         }
         
         // Update widget immediately with loading state and click handlers
         appWidgetManager.updateAppWidget(appWidgetId, views)
         
         // Start the weather service to fetch real data
-        val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
-            action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_5X1)
+        try {
+            val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
+                action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+                putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_5X1)
+            }
+            context.startService(serviceIntent)
+        } catch (e: Exception) {
+            // If service fails to start, show error
+            views.apply {
+                setTextViewText(R.id.widget_city_name, "Error")
+                setTextViewText(R.id.widget_condition, "Service unavailable")
+            }
+            appWidgetManager.updateAppWidget(appWidgetId, views)
         }
-        context.startService(serviceIntent)
     }
     
     private fun setupWidget5x1ClickHandlers(context: Context, views: RemoteViews) {

@@ -6,10 +6,9 @@
     android:targetCellHeight="1"
     android:maxResizeWidth="300dp"
     android:maxResizeHeight="110dp"
-    android:updatePeriodMillis="1800000"
+    android:updatePeriodMillis="60000"
     android:previewLayout="@layout/weather_widget_4x1"
     android:initialLayout="@layout/weather_widget_4x1"
-    android:configure="com.example.skypeek.widgets.WeatherWidgetConfigActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_4x1_description" /> 

@@ -170,6 +170,9 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
             updateWidget5x1Hourly(this, weather.hourlyForecast.take(3))
         }
         
+        // Set up click handlers
+        setupWidget5x1ClickHandlers(views)
+        
         val appWidgetManager = AppWidgetManager.getInstance(this)
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
@@ -217,6 +220,9 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
                 setTextViewText(R.id.widget_tomorrow_low, "${tomorrow.lowTemp}°")
             }
         }
+        
+        // Set up click handlers
+        setupWidget5x2ClickHandlers(views)
         
         val appWidgetManager = AppWidgetManager.getInstance(this)
         appWidgetManager.updateAppWidget(appWidgetId, views)
@@ -308,6 +314,95 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
         
         val appWidgetManager = AppWidgetManager.getInstance(this)
         appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+    
+    private fun setupWidget5x1ClickHandlers(views: RemoteViews) {
+        // Main widget click - open app
+        val mainIntent = Intent(this, com.example.skypeek.presentation.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val mainPendingIntent = android.app.PendingIntent.getActivity(
+            this, 
+            0, 
+            mainIntent, 
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.widget_root, mainPendingIntent)
+        
+        // Hourly forecast click - open app to hourly screen
+        val hourlyIntent = Intent(this, com.example.skypeek.presentation.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("open_screen", "hourly")
+        }
+        val hourlyPendingIntent = android.app.PendingIntent.getActivity(
+            this, 
+            1, 
+            hourlyIntent, 
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Set click listeners for hourly forecast sections
+        listOf(
+            R.id.widget_hour1_time, R.id.widget_hour1_icon, R.id.widget_hour1_temp,
+            R.id.widget_hour2_time, R.id.widget_hour2_icon, R.id.widget_hour2_temp,
+            R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp
+        ).forEach { viewId ->
+            views.setOnClickPendingIntent(viewId, hourlyPendingIntent)
+        }
+    }
+    
+    private fun setupWidget5x2ClickHandlers(views: RemoteViews) {
+        // Main widget click - open app
+        val mainIntent = Intent(this, com.example.skypeek.presentation.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val mainPendingIntent = android.app.PendingIntent.getActivity(
+            this, 
+            0, 
+            mainIntent, 
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        views.setOnClickPendingIntent(R.id.widget_root, mainPendingIntent)
+        
+        // Hourly forecast section click
+        val hourlyIntent = Intent(this, com.example.skypeek.presentation.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("open_screen", "hourly")
+        }
+        val hourlyPendingIntent = android.app.PendingIntent.getActivity(
+            this, 
+            1, 
+            hourlyIntent, 
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        // Set click listeners for hourly forecast sections
+        listOf(
+            R.id.widget_hour1_time, R.id.widget_hour1_icon, R.id.widget_hour1_temp,
+            R.id.widget_hour2_time, R.id.widget_hour2_icon, R.id.widget_hour2_temp,
+            R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp,
+            R.id.widget_hour4_time, R.id.widget_hour4_icon, R.id.widget_hour4_temp,
+            R.id.widget_hour5_time, R.id.widget_hour5_icon, R.id.widget_hour5_temp,
+            R.id.widget_hour6_time, R.id.widget_hour6_icon, R.id.widget_hour6_temp
+        ).forEach { viewId ->
+            views.setOnClickPendingIntent(viewId, hourlyPendingIntent)
+        }
+        
+        // Tomorrow forecast section click
+        val forecastIntent = Intent(this, com.example.skypeek.presentation.MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("open_screen", "forecast")
+        }
+        val forecastPendingIntent = android.app.PendingIntent.getActivity(
+            this, 
+            2, 
+            forecastIntent, 
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        listOf(R.id.widget_tomorrow_icon, R.id.widget_tomorrow_high, R.id.widget_tomorrow_low).forEach { viewId ->
+            views.setOnClickPendingIntent(viewId, forecastPendingIntent)
+        }
     }
     
     companion object {
