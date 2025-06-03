@@ -1,5 +1,6 @@
 package com.example.skypeek.presentation.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -7,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -16,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.cos
@@ -46,10 +48,12 @@ fun WeatherIcon(
         in 45..48 -> {
             FoggyIcon(modifier = modifier.size(size))
         }
-        in 51..67 -> {
+        // FIXED: Proper rain codes (including freezing rain but not snow)
+        51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 -> {
             RainyIcon(modifier = modifier.size(size))
         }
-        in 71..86 -> {
+        // FIXED: Only true snow codes
+        71, 73, 75, 77, 85, 86 -> {
             SnowyIcon(modifier = modifier.size(size))
         }
         in 95..99 -> {
@@ -66,6 +70,29 @@ fun WeatherIcon(
 fun SunnyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Smooth rotating animation for sun rays
+    val infiniteTransition = rememberInfiniteTransition(label = "sun_rotation")
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 20000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "sun_rays_rotation"
+    )
+    
+    // Gentle pulsing for sun glow
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "sun_glow_pulse"
+    )
+
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val sunRadius = size.minDimension * 0.22f
@@ -84,25 +111,34 @@ fun SunnyIcon(
             radius = sunRadius
         )
         
-        // Draw sun rays with iOS styling - thicker and more prominent
-        for (i in 0 until 8) {
-            val angle = (i * 45.0) * PI / 180.0
-            val rayStart = Offset(
-                center.x + (rayStartDistance * cos(angle)).toFloat(),
-                center.y + (rayStartDistance * sin(angle)).toFloat()
-            )
-            val rayEnd = Offset(
-                center.x + ((rayStartDistance + rayLength) * cos(angle)).toFloat(),
-                center.y + ((rayStartDistance + rayLength) * sin(angle)).toFloat()
-            )
-            
-            drawLine(
-                color = Color(0xFFFFB300), // iOS sun ray color
-                start = rayStart,
-                end = rayEnd,
-                strokeWidth = rayThickness,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
+        // Animated outer glow effect
+        drawCircle(
+            color = Color(0x20FFEB3B),
+            radius = sunRadius * 1.3f * glowPulse,
+            center = center
+        )
+        
+        // Draw animated sun rays with rotation
+        rotate(rotation, center) {
+            for (i in 0 until 8) {
+                val angle = (i * 45.0) * PI / 180.0
+                val rayStart = Offset(
+                    center.x + (rayStartDistance * cos(angle)).toFloat(),
+                    center.y + (rayStartDistance * sin(angle)).toFloat()
+                )
+                val rayEnd = Offset(
+                    center.x + ((rayStartDistance + rayLength) * cos(angle)).toFloat(),
+                    center.y + ((rayStartDistance + rayLength) * sin(angle)).toFloat()
+                )
+                
+                drawLine(
+                    color = Color(0xFFFFB300), // iOS sun ray color
+                    start = rayStart,
+                    end = rayEnd,
+                    strokeWidth = rayThickness,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+            }
         }
         
         // Main sun circle with gradient
@@ -121,13 +157,6 @@ fun SunnyIcon(
                 center.y - sunRadius * 0.15f
             )
         )
-        
-        // Outer glow effect
-        drawCircle(
-            color = Color(0x20FFEB3B),
-            radius = sunRadius * 1.3f,
-            center = center
-        )
     }
 }
 
@@ -135,6 +164,29 @@ fun SunnyIcon(
 fun PartlyCloudyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Gentle cloud floating animation
+    val infiniteTransition = rememberInfiniteTransition(label = "partly_cloudy_anim")
+    val cloudOffset by infiniteTransition.animateFloat(
+        initialValue = -2f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cloud_float"
+    )
+    
+    // Sun ray rotation (slower for partly cloudy)
+    val sunRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 25000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "sun_rotation"
+    )
+
     Canvas(modifier = modifier) {
         // Sun positioned exactly like iOS
         val sunCenter = Offset(size.width * 0.3f, size.height * 0.3f)
@@ -146,26 +198,28 @@ fun PartlyCloudyIcon(
             radius = sunRadius
         )
         
-        // Draw partial sun rays (only visible ones like iOS)
-        val visibleRays = listOf(0, 1, 7) // Top-right, right, and top rays
-        visibleRays.forEach { i ->
-            val angle = (i * 45.0) * PI / 180.0
-            val rayStart = Offset(
-                sunCenter.x + (sunRadius * 1.5f * cos(angle)).toFloat(),
-                sunCenter.y + (sunRadius * 1.5f * sin(angle)).toFloat()
-            )
-            val rayEnd = Offset(
-                sunCenter.x + (sunRadius * 2.2f * cos(angle)).toFloat(),
-                sunCenter.y + (sunRadius * 2.2f * sin(angle)).toFloat()
-            )
-            
-            drawLine(
-                color = Color(0xFFFFB300),
-                start = rayStart,
-                end = rayEnd,
-                strokeWidth = size.minDimension * 0.04f,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
-            )
+        // Draw animated partial sun rays
+        rotate(sunRotation, sunCenter) {
+            val visibleRays = listOf(0, 1, 7) // Top-right, right, and top rays
+            visibleRays.forEach { i ->
+                val angle = (i * 45.0) * PI / 180.0
+                val rayStart = Offset(
+                    sunCenter.x + (sunRadius * 1.5f * cos(angle)).toFloat(),
+                    sunCenter.y + (sunRadius * 1.5f * sin(angle)).toFloat()
+                )
+                val rayEnd = Offset(
+                    sunCenter.x + (sunRadius * 2.2f * cos(angle)).toFloat(),
+                    sunCenter.y + (sunRadius * 2.2f * sin(angle)).toFloat()
+                )
+                
+                drawLine(
+                    color = Color(0xFFFFB300),
+                    start = rayStart,
+                    end = rayEnd,
+                    strokeWidth = size.minDimension * 0.04f,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+            }
         }
         
         // Sun circle with gradient
@@ -175,9 +229,13 @@ fun PartlyCloudyIcon(
             center = sunCenter
         )
         
-        // Cloud positioned to partially cover sun (iOS style)
+        // Animated cloud with floating movement
+        val cloudCenter = Offset(
+            size.width * 0.65f + cloudOffset,
+            size.height * 0.65f
+        )
         drawIOSCloudWithShadow(
-            center = Offset(size.width * 0.65f, size.height * 0.65f),
+            center = cloudCenter,
             scale = 0.85f
         )
     }
@@ -187,10 +245,65 @@ fun PartlyCloudyIcon(
 fun CloudyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Multiple cloud layers with different animations
+    val infiniteTransition = rememberInfiniteTransition(label = "cloudy_animation")
+    
+    // Main cloud breathing
+    val mainCloudScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "main_cloud_scale"
+    )
+    
+    // Background cloud drift
+    val bgCloudOffset by infiniteTransition.animateFloat(
+        initialValue = -3f,
+        targetValue = 3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 8000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bg_cloud_drift"
+    )
+    
+    // Foreground cloud movement
+    val fgCloudOffset by infiniteTransition.animateFloat(
+        initialValue = 2f,
+        targetValue = -2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 6000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "fg_cloud_drift"
+    )
+
     Canvas(modifier = modifier) {
-        drawIOSCloudWithShadow(
-            center = Offset(size.width / 2f, size.height / 2f),
-            scale = 1.0f
+        // Background cloud layer (darker, larger, slower) - MADE WIDER
+        drawEnhancedIOSCloud(
+            center = Offset(size.width * 0.35f + bgCloudOffset, size.height * 0.6f),
+            scale = 1.4f, // Increased from 1.2f
+            cloudColor = Color(0xFFD3D3D3), // Light gray
+            shadowIntensity = 0.15f
+        )
+        
+        // Middle cloud layer (medium color, main focus) - MADE WIDER
+        drawEnhancedIOSCloud(
+            center = Offset(size.width / 2f, size.height * 0.45f),
+            scale = mainCloudScale * 1.3f, // Increased from 1.0f
+            cloudColor = Color.White,
+            shadowIntensity = 0.2f
+        )
+        
+        // Foreground cloud layer (brightest, smaller, faster) - MADE WIDER
+        drawEnhancedIOSCloud(
+            center = Offset(size.width * 0.7f + fgCloudOffset, size.height * 0.3f),
+            scale = 1.0f, // Increased from 0.8f
+            cloudColor = Color(0xFFFAFAFA), // Very light gray
+            shadowIntensity = 0.1f
         )
     }
 }
@@ -199,21 +312,39 @@ fun CloudyIcon(
 fun RainyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Continuous rain drop animation
+    val infiniteTransition = rememberInfiniteTransition(label = "rain_animation")
+    val rainOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rain_drops"
+    )
+    
+    // Cloud gentle movement
+    val cloudSway by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 6000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cloud_sway"
+    )
+
     Canvas(modifier = modifier) {
-        // Cloud positioned exactly like iOS
-        drawIOSCloudWithShadow(
-            center = Offset(size.width / 2f, size.height * 0.25f),
-            scale = 0.9f,
-            cloudColor = Color(0xFFE0E0E0) // Slightly darker for rain
+        // Animated WIDER cloud with gentle swaying
+        drawEnhancedIOSCloud(
+            center = Offset(size.width / 2f + cloudSway, size.height * 0.2f),
+            scale = 1.2f, // Much wider than before
+            cloudColor = Color(0xFFE0E0E0), // Slightly darker for rain
+            shadowIntensity = 0.25f
         )
         
-        // iOS-style rain drops with gradient
-        val rainGradient = Brush.linearGradient(
-            colors = listOf(Color(0xFF2196F3), Color(0xFF1976D2)),
-            start = Offset(0f, 0f),
-            end = Offset(size.width * 0.1f, size.height * 0.2f)
-        )
-        
+        // Animated rain drops
         val rainDrops = listOf(
             Triple(0.15f, 0.55f, 1.0f),   // x, y, size
             Triple(0.3f, 0.6f, 0.9f),
@@ -223,17 +354,23 @@ fun RainyIcon(
             Triple(0.85f, 0.58f, 0.9f)
         )
         
-        rainDrops.forEach { (x, yStart, sizeScale) ->
+        rainDrops.forEachIndexed { index, (x, yStart, sizeScale) ->
             val dropHeight = size.height * 0.25f * sizeScale
             val strokeWidth = size.minDimension * 0.025f * sizeScale
             
-            // Draw rain drop with rounded ends
+            // Stagger the animation for each drop
+            val staggeredOffset = (rainOffset + index * 0.2f) % 1f
+            val animatedY = yStart + (staggeredOffset * 0.3f)
+            
+            // Create fading effect as drops fall
+            val alpha = 1f - (staggeredOffset * 0.3f)
+            
             drawLine(
-                color = Color(0xFF2196F3),
-                start = Offset(size.width * x, size.height * yStart),
+                color = Color(0xFF2196F3).copy(alpha = alpha),
+                start = Offset(size.width * x, size.height * animatedY),
                 end = Offset(
                     size.width * (x + 0.02f),
-                    size.height * yStart + dropHeight
+                    size.height * animatedY + dropHeight * (1f - staggeredOffset * 0.3f)
                 ),
                 strokeWidth = strokeWidth,
                 cap = androidx.compose.ui.graphics.StrokeCap.Round
@@ -246,15 +383,39 @@ fun RainyIcon(
 fun SnowyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Gentle snowflake falling animation
+    val infiniteTransition = rememberInfiniteTransition(label = "snow_animation")
+    val snowFall by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "snowflakes_falling"
+    )
+    
+    // Snowflake rotation
+    val snowRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 8000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "snowflake_rotation"
+    )
+
     Canvas(modifier = modifier) {
-        // Cloud exactly like iOS
-        drawIOSCloudWithShadow(
-            center = Offset(size.width / 2f, size.height * 0.25f),
-            scale = 0.9f,
-            cloudColor = Color(0xFFF5F5F5)
+        // WIDER Cloud for snow
+        drawEnhancedIOSCloud(
+            center = Offset(size.width / 2f, size.height * 0.2f),
+            scale = 1.2f, // Much wider than before
+            cloudColor = Color(0xFFF5F5F5),
+            shadowIntensity = 0.15f
         )
         
-        // iOS-style snowflakes - more detailed
+        // Animated snowflakes
         val snowflakes = listOf(
             Triple(0.2f, 0.55f, 1.0f),
             Triple(0.35f, 0.65f, 0.8f),
@@ -263,12 +424,27 @@ fun SnowyIcon(
             Triple(0.8f, 0.6f, 0.7f)
         )
         
-        snowflakes.forEach { (x, y, scale) ->
-            drawIOSSnowflake(
-                center = Offset(size.width * x, size.height * y),
-                radius = size.minDimension * 0.04f * scale,
-                color = Color.White
+        snowflakes.forEachIndexed { index, (x, y, scale) ->
+            // Staggered falling animation
+            val staggeredFall = (snowFall + index * 0.3f) % 1f
+            val animatedY = y + (staggeredFall * 0.2f)
+            
+            // Gentle side-to-side drift
+            val drift = sin((snowFall + index) * 2 * PI).toFloat() * 0.02f
+            
+            val snowflakeCenter = Offset(
+                size.width * (x + drift),
+                size.height * animatedY
             )
+            
+            // Rotate each snowflake individually
+            rotate(snowRotation + index * 60f, snowflakeCenter) {
+                drawIOSSnowflake(
+                    center = snowflakeCenter,
+                    radius = size.minDimension * 0.04f * scale,
+                    color = Color.White.copy(alpha = 1f - staggeredFall * 0.3f)
+                )
+            }
         }
     }
 }
@@ -277,17 +453,49 @@ fun SnowyIcon(
 fun StormyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Lightning flash animation
+    val infiniteTransition = rememberInfiniteTransition(label = "storm_animation")
+    val lightningFlash by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 4000
+                0f at 0
+                0f at 3000
+                1f at 3100
+                0f at 3200
+                1f at 3250
+                0f at 3300
+                0f at 4000
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "lightning_flash"
+    )
+    
+    // Cloud rumbling
+    val cloudRumble by infiniteTransition.animateFloat(
+        initialValue = -0.5f,
+        targetValue = 0.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cloud_rumble"
+    )
+
     Canvas(modifier = modifier) {
-        // Dark storm cloud exactly like iOS
-        drawIOSCloudWithShadow(
-            center = Offset(size.width / 2f, size.height * 0.25f),
-            scale = 0.95f,
-            cloudColor = Color(0xFF666666)
+        // Animated WIDER storm cloud with rumbling
+        drawEnhancedIOSCloud(
+            center = Offset(size.width / 2f + cloudRumble, size.height * 0.2f),
+            scale = 1.3f, // Much wider and more imposing for storms
+            cloudColor = Color(0xFF666666),
+            shadowIntensity = 0.3f
         )
         
-        // iOS-style lightning bolt with glow
+        // Lightning bolt with flash effect
         val lightningPath = Path().apply {
-            // More accurate iOS lightning shape
             moveTo(size.width * 0.42f, size.height * 0.5f)
             lineTo(size.width * 0.35f, size.height * 0.68f)
             lineTo(size.width * 0.44f, size.height * 0.68f)
@@ -298,16 +506,19 @@ fun StormyIcon(
             close()
         }
         
-        // Lightning glow effect
-        drawPath(
-            path = lightningPath,
-            color = Color(0x40FFEB3B)
-        )
+        // Lightning glow effect (animated)
+        if (lightningFlash > 0.3f) {
+            drawPath(
+                path = lightningPath,
+                color = Color(0x60FFEB3B)
+            )
+        }
         
-        // Main lightning bolt
+        // Main lightning bolt (with flash intensity)
+        val lightningAlpha = if (lightningFlash > 0.3f) 1f else 0.7f + lightningFlash * 0.3f
         drawPath(
             path = lightningPath,
-            color = Color(0xFFFFEB3B)
+            color = Color(0xFFFFEB3B).copy(alpha = lightningAlpha)
         )
     }
 }
@@ -316,8 +527,19 @@ fun StormyIcon(
 fun FoggyIcon(
     modifier: Modifier = Modifier
 ) {
+    // Flowing fog animation
+    val infiniteTransition = rememberInfiniteTransition(label = "fog_animation")
+    val fogFlow by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 6000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "fog_flow"
+    )
+
     Canvas(modifier = modifier) {
-        // iOS-style fog lines with gradient opacity
         val fogLines = listOf(
             Triple(0.05f, 0.2f, 0.9f),  // start x, y, length
             Triple(0.1f, 0.3f, 0.8f),
@@ -332,10 +554,15 @@ fun FoggyIcon(
             val alpha = 0.9f - (index * 0.1f)
             val thickness = size.minDimension * (0.025f - index * 0.002f)
             
+            // Animated flowing offset
+            val flowOffset = (fogFlow + index * 0.2f) % 1f
+            val animatedStartX = startX + (sin(flowOffset * 2 * PI).toFloat() * 0.05f)
+            val animatedLength = length + (cos(flowOffset * 2 * PI).toFloat() * 0.1f)
+            
             drawLine(
-                color = Color(0xFFE0E0E0).copy(alpha = alpha),
-                start = Offset(size.width * startX, size.height * y),
-                end = Offset(size.width * (startX + length), size.height * y),
+                color = Color(0xFFE0E0E0).copy(alpha = alpha * (0.7f + flowOffset * 0.3f)),
+                start = Offset(size.width * animatedStartX, size.height * y),
+                end = Offset(size.width * (animatedStartX + animatedLength), size.height * y),
                 strokeWidth = thickness,
                 cap = androidx.compose.ui.graphics.StrokeCap.Round
             )
@@ -347,6 +574,18 @@ fun FoggyIcon(
 fun MoonIcon(
     modifier: Modifier = Modifier
 ) {
+    // Gentle moon glow pulsing
+    val infiniteTransition = rememberInfiniteTransition(label = "moon_animation")
+    val moonGlow by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 4000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "moon_glow"
+    )
+
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
         val moonRadius = size.minDimension * 0.28f
@@ -362,10 +601,10 @@ fun MoonIcon(
             radius = moonRadius
         )
         
-        // Outer glow
+        // Animated outer glow
         drawCircle(
             color = Color(0x30F5F5DC),
-            radius = moonRadius * 1.4f,
+            radius = moonRadius * 1.4f * moonGlow,
             center = center
         )
         
@@ -409,6 +648,28 @@ fun MoonIcon(
 fun PartlyCloudyNightIcon(
     modifier: Modifier = Modifier
 ) {
+    // Moon glow and cloud drift
+    val infiniteTransition = rememberInfiniteTransition(label = "partly_cloudy_night")
+    val moonGlow by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 5000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "moon_glow"
+    )
+    
+    val cloudDrift by infiniteTransition.animateFloat(
+        initialValue = -1.5f,
+        targetValue = 1.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 7000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cloud_drift"
+    )
+
     Canvas(modifier = modifier) {
         // Moon positioned like iOS
         val moonCenter = Offset(size.width * 0.3f, size.height * 0.3f)
@@ -420,6 +681,13 @@ fun PartlyCloudyNightIcon(
             radius = moonRadius
         )
         
+        // Animated moon glow
+        drawCircle(
+            color = Color(0x25F5F5DC),
+            radius = moonRadius * 1.5f * moonGlow,
+            center = moonCenter
+        )
+        
         // Moon circle with gradient
         drawCircle(
             brush = moonGradient,
@@ -427,9 +695,9 @@ fun PartlyCloudyNightIcon(
             center = moonCenter
         )
         
-        // Cloud positioned to partially cover moon
+        // Cloud positioned to partially cover moon with drift animation
         drawIOSCloudWithShadow(
-            center = Offset(size.width * 0.65f, size.height * 0.65f),
+            center = Offset(size.width * 0.65f + cloudDrift, size.height * 0.65f),
             scale = 0.85f,
             cloudColor = Color(0xFFF8F8F8)
         )
@@ -649,4 +917,98 @@ private fun isNightTime(timestamp: Long): Boolean {
     
     // Night time: 8 PM (20:00) to 6 AM (06:00)
     return hour >= 20 || hour < 6
+}
+
+// Enhanced cloud drawing function for better cloudy icon
+private fun DrawScope.drawEnhancedIOSCloud(
+    center: Offset,
+    scale: Float,
+    cloudColor: Color = Color.White,
+    shadowIntensity: Float = 0.2f
+) {
+    val baseRadius = size.minDimension * 0.12f * scale // Increased from 0.09f for wider clouds
+    
+    // Enhanced cloud gradient for more depth
+    val cloudGradient = Brush.radialGradient(
+        colors = listOf(
+            cloudColor,
+            cloudColor.copy(alpha = 0.95f),
+            cloudColor.copy(alpha = 0.85f),
+            cloudColor.copy(alpha = 0.75f)
+        ),
+        center = Offset(center.x - baseRadius * 0.2f, center.y - baseRadius * 0.3f),
+        radius = baseRadius * 2.5f
+    )
+    
+    // Multiple shadow layers for realistic depth
+    val shadowCenter1 = Offset(center.x + baseRadius * 0.08f, center.y + baseRadius * 0.12f)
+    val shadowCenter2 = Offset(center.x + baseRadius * 0.15f, center.y + baseRadius * 0.18f)
+    
+    // Draw shadow layers
+    drawPerfectIOSCloud(shadowCenter2, scale * 1.02f, Color(0x10000000))
+    drawPerfectIOSCloud(shadowCenter1, scale * 1.01f, Color(0x15000000))
+    
+    // iOS-accurate cloud structure with MORE EXPANSIVE proportions
+    val cloudParts = listOf(
+        // BOTTOM FOUNDATION - Much wider flat base
+        Triple(0.0f, 0.35f, 1.8f),      // Main bottom center - WIDER
+        Triple(-0.6f, 0.35f, 1.5f),     // Left extension - EXTENDED
+        Triple(0.6f, 0.35f, 1.5f),      // Right extension - EXTENDED
+        Triple(-0.9f, 0.25f, 1.2f),     // Far left - EXTENDED
+        Triple(0.9f, 0.25f, 1.2f),      // Far right - EXTENDED
+        Triple(-1.1f, 0.3f, 0.8f),      // Extra far left
+        Triple(1.1f, 0.3f, 0.8f),       // Extra far right
+        
+        // MIDDLE LAYER - Wider side bulges
+        Triple(-0.75f, 0.05f, 1.3f),    // Left bulge - EXTENDED
+        Triple(0.75f, 0.05f, 1.3f),     // Right bulge - EXTENDED
+        Triple(-0.4f, 0.15f, 1.0f),     // Inner left - WIDER
+        Triple(0.4f, 0.15f, 1.0f),      // Inner right - WIDER
+        Triple(0.0f, 0.1f, 1.2f),       // Center fill - WIDER
+        Triple(-0.2f, 0.2f, 0.9f),      // Left center
+        Triple(0.2f, 0.2f, 0.9f),       // Right center
+        
+        // TOP LAYER - More expansive puffy top
+        Triple(-0.5f, -0.25f, 1.1f),    // Top left main - EXTENDED
+        Triple(-0.15f, -0.35f, 1.0f),   // Top left-center - WIDER
+        Triple(0.15f, -0.35f, 1.0f),    // Top right-center - WIDER
+        Triple(0.5f, -0.25f, 1.1f),     // Top right main - EXTENDED
+        Triple(0.0f, -0.45f, 0.95f),    // Top center peak - WIDER
+        Triple(-0.3f, -0.15f, 0.9f),    // Top left fill - EXTENDED
+        Triple(0.3f, -0.15f, 0.9f),     // Top right fill - EXTENDED
+        Triple(-0.65f, -0.1f, 0.7f),    // Far top left
+        Triple(0.65f, -0.1f, 0.7f),     // Far top right
+        
+        // EXTRA WIDE EXTENSIONS - New additions for fullness
+        Triple(-0.8f, 0.15f, 0.7f),     // Left edge smooth - EXTENDED
+        Triple(0.8f, 0.15f, 0.7f),      // Right edge smooth - EXTENDED
+        Triple(-0.35f, -0.05f, 0.8f),   // Top left smooth - WIDER
+        Triple(0.35f, -0.05f, 0.8f),    // Top right smooth - WIDER
+        Triple(-0.6f, -0.1f, 0.7f),     // Mid left smooth - EXTENDED
+        Triple(0.6f, -0.1f, 0.7f),      // Mid right smooth - EXTENDED
+        Triple(-0.95f, 0.2f, 0.5f),     // Extra left extension
+        Triple(0.95f, 0.2f, 0.5f),      // Extra right extension
+    )
+    
+    // Draw all cloud parts with gradient
+    cloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
+        drawCircle(
+            color = cloudColor,
+            radius = baseRadius * sizeMultiplier,
+            center = Offset(
+                center.x + baseRadius * xOffset,
+                center.y + baseRadius * yOffset
+            )
+        )
+    }
+    
+    // Add subtle highlight on top for iOS realism - WIDER highlight
+    drawCircle(
+        color = Color(0x20FFFFFF),
+        radius = baseRadius * 1.4f, // Increased from 1.2f
+        center = Offset(
+            center.x - baseRadius * 0.1f,
+            center.y - baseRadius * 0.4f
+        )
+    )
 } 
