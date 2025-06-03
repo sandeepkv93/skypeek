@@ -203,40 +203,40 @@ private class RaindropState(
 private fun getWeatherGradient(weatherType: WeatherType): List<ULong> {
     return when (weatherType) {
         WeatherType.SUNNY -> listOf(
-            0xFF4A90E2UL,  // Bright blue at top
-            0xFF87CEEDUL,  // Sky blue
-            0xFF98D8E8UL,  // Light blue
-            0xFFFFF8F0UL   // Very light cream at bottom
+            Color(0xFF4A90E2).value,  // Bright blue at top
+            Color(0xFF87CEEB).value,  // Sky blue
+            Color(0xFF98D8E8).value,  // Light blue
+            Color(0xFFFFF8F0).value   // Very light cream at bottom
         )
         WeatherType.CLOUDY -> listOf(
-            0xFF8E9AAF,    // Cool gray-blue
-            0xFFA8B4C7,    // Light gray-blue  
-            0xFFCBD2E1,    // Very light gray-blue
-            0xFFF1F3F6     // Off-white
-        ).map { it.toULong() }
+            Color(0xFF8E9AAF).value,    // Cool gray-blue
+            Color(0xFFA8B4C7).value,    // Light gray-blue  
+            Color(0xFFCBD2E1).value,    // Very light gray-blue
+            Color(0xFFF1F3F6).value     // Off-white
+        )
         WeatherType.RAINY -> listOf(
-            0xFF2F4858,    // Dark blue-gray
-            0xFF4A6741,    // Deeper gray-blue
-            0xFF5D7A89,    // Medium gray-blue
-            0xFF8FA7B7     // Light gray-blue
-        ).map { it.toULong() }
+            Color(0xFF2F4858).value,    // Dark blue-gray
+            Color(0xFF4A6741).value,    // Deeper gray-blue
+            Color(0xFF5D7A89).value,    // Medium gray-blue
+            Color(0xFF8FA7B7).value     // Light gray-blue
+        )
         WeatherType.SNOW -> listOf(
-            0xFFB8C6DB,    // Light blue-gray
-            0xFFD1DCE8,    // Very light blue-gray
-            0xFFE8EDF4,    // Almost white blue
-            0xFFFAFBFC     // Pure white
-        ).map { it.toULong() }
+            Color(0xFFB8C6DB).value,    // Light blue-gray
+            Color(0xFFD1DCE8).value,    // Very light blue-gray
+            Color(0xFFE8EDF4).value,    // Almost white blue
+            Color(0xFFFAFBFC).value     // Pure white
+        )
         WeatherType.STORMY -> listOf(
-            0xFF1C1C1C,    // Very dark
-            0xFF2F2F35,    // Dark gray
-            0xFF4A4A50,    // Medium dark gray
-            0xFF6A6A70     // Lighter dark gray
-        ).map { it.toULong() }
+            Color(0xFF1C1C1C).value,    // Very dark
+            Color(0xFF2F2F35).value,    // Dark gray
+            Color(0xFF4A4A50).value,    // Medium dark gray
+            Color(0xFF6A6A70).value     // Lighter dark gray
+        )
         WeatherType.FOGGY -> listOf(
-            0xFF6B7280,    // Gray
-            0xFF8B92A5,    // Light gray
-            0xFFB1B8CA,    // Lighter gray
-            0xFFD5D9E4     // Very light gray
-        ).map { it.toULong() }
+            Color(0xFF6B7280).value,    // Gray
+            Color(0xFF8B92A5).value,    // Light gray
+            Color(0xFFB1B8CA).value,    // Lighter gray
+            Color(0xFFD5D9E4).value     // Very light gray
+        )
     }
 } 
