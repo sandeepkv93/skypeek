@@ -9,21 +9,6 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.example.skypeek.R
 import com.example.skypeek.presentation.MainActivity
-import com.example.skypeek.domain.repository.WeatherRepository
-import com.example.skypeek.domain.model.WeatherData
-import dagger.hilt.android.EntryPointAccessors
-import dagger.hilt.EntryPoint
-import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.*
-import java.text.SimpleDateFormat
-import java.util.*
-
-@EntryPoint
-@InstallIn(SingletonComponent::class)
-interface WeatherWidgetEntryPoint {
-    fun weatherRepository(): WeatherRepository
-}
 
 class WeatherWidget5x1Provider : AppWidgetProvider() {
     
@@ -70,136 +55,52 @@ class WeatherWidget5x1Provider : AppWidgetProvider() {
     ) {
         val views = RemoteViews(context.packageName, R.layout.weather_widget_5x1)
         
+        // Set up click handlers first
+        setupWidget5x1ClickHandlers(context, views)
+        
         // Show loading state initially
         views.apply {
             setTextViewText(R.id.widget_city_name, "Loading...")
             setTextViewText(R.id.widget_temperature, "--°")
-            setTextViewText(R.id.widget_condition, "Getting location...")
+            setTextViewText(R.id.widget_condition, "Getting weather...")
             setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
         }
         
-        // Update widget immediately with loading state
+        // Update widget immediately with loading state and click handlers
         appWidgetManager.updateAppWidget(appWidgetId, views)
         
-        // Fetch weather data asynchronously
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val hiltEntryPoint = EntryPointAccessors.fromApplication(
-                    context.applicationContext,
-                    WeatherWidgetEntryPoint::class.java
-                )
-                val weatherRepository = hiltEntryPoint.weatherRepository()
-                
-                val location = getCurrentLocation(context)
-                if (location != null) {
-                    val weatherResult = weatherRepository.getWeatherData(
-                        location.first,
-                        location.second
-                    )
-                    
-                    weatherResult.fold(
-                        onSuccess = { weather ->
-                            updateWidget5x1WithData(context, appWidgetManager, appWidgetId, weather)
-                        },
-                        onFailure = { error ->
-                            showWidget5x1Error(context, appWidgetManager, appWidgetId, error.message ?: "Failed to load weather")
-                        }
-                    )
-                } else {
-                    showWidget5x1Error(context, appWidgetManager, appWidgetId, "Location not available")
-                }
-            } catch (e: Exception) {
-                showWidget5x1Error(context, appWidgetManager, appWidgetId, "Network error")
-            }
+        // Start the weather service to fetch real data
+        val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
+            action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_5X1)
         }
-        
-        // Set up click handlers
-        setupWidget5x1ClickHandlers(context, views)
-        
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-    
-    private fun updateWidget5x1WithData(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        weather: WeatherData
-    ) {
-        val views = RemoteViews(context.packageName, R.layout.weather_widget_5x1)
-        
-        views.apply {
-            // Current weather information
-            setTextViewText(R.id.widget_city_name, weather.location.cityName)
-            setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
-            setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
-            setTextViewText(
-                R.id.widget_high_low,
-                "H:${weather.currentWeather.highTemp}° L:${weather.currentWeather.lowTemp}°"
-            )
-            setImageViewResource(R.id.widget_weather_icon, getWeatherIconResource(weather.currentWeather.weatherCode))
-            
-            // Next 3 hours forecast
-            val hourlyForecast = weather.hourlyForecast.take(3)
-            val hourlyViews = listOf(
-                Triple(R.id.widget_hour1_time, R.id.widget_hour1_icon, R.id.widget_hour1_temp),
-                Triple(R.id.widget_hour2_time, R.id.widget_hour2_icon, R.id.widget_hour2_temp),
-                Triple(R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp)
-            )
-            
-            hourlyForecast.forEachIndexed { index, hour ->
-                if (index < hourlyViews.size) {
-                    val (timeId, iconId, tempId) = hourlyViews[index]
-                    setTextViewText(timeId, hour.time)
-                    setImageViewResource(iconId, getWeatherIconResource(hour.weatherCode))
-                    setTextViewText(tempId, "${hour.temperature}°")
-                }
-            }
-        }
-        
-        setupWidget5x1ClickHandlers(context, views)
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-    
-    private fun showWidget5x1Error(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        message: String
-    ) {
-        val views = RemoteViews(context.packageName, R.layout.weather_widget_5x1)
-        views.apply {
-            setTextViewText(R.id.widget_city_name, "Error")
-            setTextViewText(R.id.widget_temperature, "--°")
-            setTextViewText(R.id.widget_condition, message)
-            setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
-        }
-        
-        setupWidget5x1ClickHandlers(context, views)
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-    }
-    
-    private fun getCurrentLocation(context: Context): Pair<Double, Double>? {
-        // For now, return a default location (San Jose, CA)
-        // In a production app, you'd implement proper location services
-        return Pair(37.3382, -121.8863)
+        context.startService(serviceIntent)
     }
     
     private fun setupWidget5x1ClickHandlers(context: Context, views: RemoteViews) {
         // Main widget click - open app
-        val mainIntent = Intent(context, WeatherWidget5x1Provider::class.java).apply {
-            action = ACTION_WIDGET_CLICK
+        val mainIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
-        val mainPendingIntent = PendingIntent.getBroadcast(
-            context, 0, mainIntent, PendingIntent.FLAG_IMMUTABLE
+        val mainPendingIntent = PendingIntent.getActivity(
+            context, 
+            0, 
+            mainIntent, 
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         views.setOnClickPendingIntent(R.id.widget_root, mainPendingIntent)
         
         // Hourly forecast click - open app to hourly screen
-        val hourlyIntent = Intent(context, WeatherWidget5x1Provider::class.java).apply {
-            action = ACTION_HOURLY_CLICK
+        val hourlyIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("open_screen", "hourly")
         }
-        val hourlyPendingIntent = PendingIntent.getBroadcast(
-            context, 1, hourlyIntent, PendingIntent.FLAG_IMMUTABLE
+        val hourlyPendingIntent = PendingIntent.getActivity(
+            context, 
+            1, 
+            hourlyIntent, 
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
         // Set click listeners for hourly forecast sections
@@ -209,18 +110,6 @@ class WeatherWidget5x1Provider : AppWidgetProvider() {
             R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp
         ).forEach { viewId ->
             views.setOnClickPendingIntent(viewId, hourlyPendingIntent)
-        }
-    }
-    
-    private fun getWeatherIconResource(weatherCode: Int): Int {
-        return when (weatherCode) {
-            0 -> R.drawable.ic_sunny
-            1, 2, 3 -> R.drawable.ic_partly_cloudy
-            45, 48 -> R.drawable.ic_fog
-            51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 -> R.drawable.ic_rain
-            71, 73, 75, 77, 85, 86 -> R.drawable.ic_snow
-            95, 96, 99 -> R.drawable.ic_thunderstorm
-            else -> R.drawable.ic_cloudy
         }
     }
     

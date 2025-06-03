@@ -279,9 +279,9 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
     private fun getWidgetLocation(appWidgetId: Int): com.example.skypeek.domain.model.LocationData {
         // Get location from widget configuration or use default
         val prefs = getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
-        val latitude = prefs.getFloat("lat_$appWidgetId", 37.33f).toDouble()
-        val longitude = prefs.getFloat("lon_$appWidgetId", -122.03f).toDouble()
-        val cityName = prefs.getString("city_$appWidgetId", "Cupertino") ?: "Cupertino"
+        val latitude = prefs.getFloat("lat_$appWidgetId", 37.3382f).toDouble()
+        val longitude = prefs.getFloat("lon_$appWidgetId", -121.8863f).toDouble()
+        val cityName = prefs.getString("city_$appWidgetId", "San Jose") ?: "San Jose"
         
         return com.example.skypeek.domain.model.LocationData(
             latitude = latitude,
