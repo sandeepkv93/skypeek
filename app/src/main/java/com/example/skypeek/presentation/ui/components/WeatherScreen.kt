@@ -64,7 +64,8 @@ fun WeatherScreen(
                 temperature = weatherData.currentWeather.temperature,
                 condition = weatherData.currentWeather.condition,
                 highTemp = weatherData.currentWeather.highTemp,
-                lowTemp = weatherData.currentWeather.lowTemp
+                lowTemp = weatherData.currentWeather.lowTemp,
+                weatherCode = weatherData.currentWeather.weatherCode
             )
             
             Spacer(modifier = Modifier.height(30.dp))
@@ -131,11 +132,19 @@ private fun MainTemperatureDisplay(
     temperature: Int,
     condition: String,
     highTemp: Int,
-    lowTemp: Int
+    lowTemp: Int,
+    weatherCode: Int
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Large weather icon - prominent display like iOS
+        WeatherIcon(
+            weatherCode = weatherCode,
+            size = 120.dp,
+            modifier = Modifier.padding(bottom = 20.dp)
+        )
+        
         // Main temperature - must dominate the screen
         Text(
             text = "${temperature}°",
@@ -209,10 +218,10 @@ private fun HourlyForecastItem(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // Weather icon (emoji)
-        Text(
-            text = hour.icon,
-            style = WeatherTextStyles.HourlyTemp.copy(fontSize = WeatherTextStyles.HourlyTemp.fontSize * 1.5f),
+        // Weather icon (custom iOS-style icon)
+        WeatherIcon(
+            weatherCode = hour.weatherCode,
+            size = 30.dp,
             modifier = Modifier.height(35.dp)
         )
         
@@ -281,12 +290,15 @@ private fun DailyForecastRow(
         )
         
         // Weather icon
-        Text(
-            text = day.icon,
-            style = WeatherTextStyles.DailyDay.copy(fontSize = WeatherTextStyles.DailyDay.fontSize * 1.4f),
+        Box(
             modifier = Modifier.width(40.dp),
-            textAlign = TextAlign.Center
-        )
+            contentAlignment = Alignment.Center
+        ) {
+            WeatherIcon(
+                weatherCode = day.weatherCode,
+                size = 28.dp
+            )
+        }
         
         // Low temperature
         Text(
