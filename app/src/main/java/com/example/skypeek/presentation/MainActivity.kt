@@ -98,6 +98,9 @@ fun WeatherApp(
         viewModel.setPermissionGranted(isGranted)
         if (isGranted) {
             onLocationRequest()
+        } else {
+            // Permission denied, fallback to default location
+            viewModel.loadDefaultLocationAsFallback()
         }
     }
     
@@ -118,9 +121,13 @@ fun WeatherApp(
         }
     }
     
-    // Request location permission on first launch
-    LaunchedEffect(Unit) {
-        if (!locationPermissionState.status.isGranted && !locationPermissionState.status.shouldShowRationale) {
+    // Request location permission on first launch or handle denied permission
+    LaunchedEffect(locationPermissionState.status.isGranted) {
+        if (locationPermissionState.status.isGranted) {
+            // Permission granted, get current location
+            onLocationRequest()
+        } else if (screenState.showLocationDialog && !locationPermissionState.status.shouldShowRationale) {
+            // Initial request
             locationPermissionState.launchPermissionRequest()
         }
     }

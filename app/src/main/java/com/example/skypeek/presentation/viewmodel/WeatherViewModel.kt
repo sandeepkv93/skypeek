@@ -30,11 +30,25 @@ class WeatherViewModel @Inject constructor(
     val showMenu: StateFlow<Boolean> = _showMenu.asStateFlow()
 
     init {
-        loadDefaultLocation()
+        // Try to get current location first, fallback to default if not available
+        requestCurrentLocationFirst()
     }
 
     /**
-     * Load weather for the default location (San Francisco Bay Area)
+     * Try to get current location first, fallback to default location
+     */
+    private fun requestCurrentLocationFirst() {
+        viewModelScope.launch {
+            // Show loading state
+            _screenState.value = _screenState.value.copy(
+                weatherStates = listOf(WeatherUiState.Loading),
+                showLocationDialog = true // Request location permission
+            )
+        }
+    }
+
+    /**
+     * Load weather for the default location (San Jose) - only as fallback
      */
     private fun loadDefaultLocation() {
         val defaultLocation = LocationData(
@@ -46,6 +60,16 @@ class WeatherViewModel @Inject constructor(
         )
         
         loadWeatherForLocations(listOf(defaultLocation))
+    }
+
+    /**
+     * Load default location as fallback when location permission is denied
+     */
+    fun loadDefaultLocationAsFallback() {
+        viewModelScope.launch {
+            _screenState.value = _screenState.value.copy(showLocationDialog = false)
+            loadDefaultLocation()
+        }
     }
 
     /**
