@@ -86,22 +86,10 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
         val views = RemoteViews(packageName, R.layout.weather_widget_4x1)
         
         views.apply {
-            setTextViewText(R.id.widget_city, weather.location.cityName)
-            setTextViewText(R.id.widget_temp, "${weather.currentWeather.temperature}°")
+            setTextViewText(R.id.widget_city_name, weather.location.cityName)
+            setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
             setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
-            setTextViewText(
-                R.id.widget_high_low,
-                "H:${weather.currentWeather.highTemp}° L:${weather.currentWeather.lowTemp}°"
-            )
-            
-            // Set weather icon
-            setImageViewResource(
-                R.id.widget_icon,
-                getWeatherIconResource(weather.currentWeather.weatherCode)
-            )
-            
-            // Set background based on weather type
-            setWidgetBackground(this, weather.currentWeather.backgroundType)
+            setTextViewText(R.id.widget_weather_icon, weather.currentWeather.icon)
         }
         
         val appWidgetManager = AppWidgetManager.getInstance(this)
@@ -112,28 +100,17 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
         val views = RemoteViews(packageName, R.layout.weather_widget_4x2)
         
         views.apply {
-            setTextViewText(R.id.widget_city_large, weather.location.cityName)
-            setTextViewText(R.id.widget_time, getCurrentTimeString())
-            setTextViewText(R.id.widget_temp_large, "${weather.currentWeather.temperature}°")
-            setTextViewText(R.id.widget_condition_large, weather.currentWeather.condition)
+            setTextViewText(R.id.widget_city_name, weather.location.cityName)
+            setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
+            setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
             setTextViewText(
-                R.id.widget_high_low_large,
+                R.id.widget_high_low,
                 "H:${weather.currentWeather.highTemp}° L:${weather.currentWeather.lowTemp}°"
             )
-            setTextViewText(
-                R.id.widget_updated,
-                "Updated ${getTimeAgo(weather.lastUpdated)}"
-            )
-            setImageViewResource(
-                R.id.widget_icon_large,
-                getWeatherIconResource(weather.currentWeather.weatherCode)
-            )
+            setTextViewText(R.id.widget_weather_icon, weather.currentWeather.icon)
             
             // Update hourly forecast
             updateWidget4x2Hourly(this, weather.hourlyForecast.take(4))
-            
-            // Set background based on weather type
-            setWidgetBackground(this, weather.currentWeather.backgroundType)
         }
         
         val appWidgetManager = AppWidgetManager.getInstance(this)
@@ -142,32 +119,25 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
     
     private fun updateWidget4x2Hourly(views: RemoteViews, hourlyForecast: List<com.example.skypeek.domain.model.HourlyWeather>) {
         val hourlyViews = listOf(
-            Triple(R.id.widget_hour_1_time, R.id.widget_hour_1_icon, R.id.widget_hour_1_temp),
-            Triple(R.id.widget_hour_2_time, R.id.widget_hour_2_icon, R.id.widget_hour_2_temp),
-            Triple(R.id.widget_hour_3_time, R.id.widget_hour_3_icon, R.id.widget_hour_3_temp),
-            Triple(R.id.widget_hour_4_time, R.id.widget_hour_4_icon, R.id.widget_hour_4_temp)
+            Triple(R.id.widget_hour1_time, R.id.widget_hour1_icon, R.id.widget_hour1_temp),
+            Triple(R.id.widget_hour2_time, R.id.widget_hour2_icon, R.id.widget_hour2_temp),
+            Triple(R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp),
+            Triple(R.id.widget_hour4_time, R.id.widget_hour4_icon, R.id.widget_hour4_temp)
         )
         
         hourlyForecast.forEachIndexed { index, hour ->
             if (index < hourlyViews.size) {
                 val (timeId, iconId, tempId) = hourlyViews[index]
                 views.setTextViewText(timeId, hour.time)
-                views.setImageViewResource(iconId, getWeatherIconResource(hour.weatherCode))
+                views.setTextViewText(iconId, hour.icon)
                 views.setTextViewText(tempId, "${hour.temperature}°")
             }
         }
     }
     
     private fun setWidgetBackground(views: RemoteViews, weatherType: WeatherType) {
-        val backgroundResource = when (weatherType) {
-            WeatherType.SUNNY -> R.drawable.widget_background_sunny
-            WeatherType.CLOUDY -> R.drawable.widget_background_cloudy
-            WeatherType.RAINY -> R.drawable.widget_background_rainy
-            WeatherType.SNOW -> R.drawable.widget_background_snow
-            WeatherType.STORMY -> R.drawable.widget_background_stormy
-            WeatherType.FOGGY -> R.drawable.widget_background_foggy
-        }
-        views.setInt(R.id.widget_root, "setBackgroundResource", backgroundResource)
+        // Background is already set in the XML layout
+        // We can implement dynamic background changes later if needed
     }
     
     private fun getWeatherIconResource(weatherCode: Int): Int {
@@ -223,8 +193,8 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
         }
         
         val views = RemoteViews(packageName, layoutId)
-        views.setTextViewText(R.id.widget_city, "Error")
-        views.setTextViewText(R.id.widget_temp, "--°")
+        views.setTextViewText(R.id.widget_city_name, "Error")
+        views.setTextViewText(R.id.widget_temperature, "--°")
         views.setTextViewText(R.id.widget_condition, message)
         
         val appWidgetManager = AppWidgetManager.getInstance(this)

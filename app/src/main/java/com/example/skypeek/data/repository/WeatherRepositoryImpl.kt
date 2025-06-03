@@ -39,7 +39,7 @@ class WeatherRepositoryImpl @Inject constructor(
     private val openWeatherMapApi: OpenWeatherMapApi,
     private val weatherDao: WeatherDao,
     private val locationDao: LocationDao,
-    private val gson: Gson = Gson()
+    private val gson: Gson
 ) : WeatherRepository {
 
     private val dataStore = context.dataStore

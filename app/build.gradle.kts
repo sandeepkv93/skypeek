@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -13,7 +15,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.skypeek"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
@@ -154,7 +156,7 @@ dependencies {
 }
 
 fun getApiKey(): String {
-    val properties = java.util.Properties()
+    val properties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         properties.load(localPropertiesFile.inputStream())
@@ -164,7 +166,7 @@ fun getApiKey(): String {
 }
 
 fun getOpenWeatherApiKey(): String {
-    val properties = java.util.Properties()
+    val properties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
         properties.load(localPropertiesFile.inputStream())

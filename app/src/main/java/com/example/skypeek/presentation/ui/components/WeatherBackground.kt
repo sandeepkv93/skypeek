@@ -192,13 +192,13 @@ private class RaindropState(
     val length: Float
 )
 
-private fun getWeatherGradient(weatherType: WeatherType): List<Long> {
+private fun getWeatherGradient(weatherType: WeatherType): List<ULong> {
     return when (weatherType) {
-        WeatherType.SUNNY -> WeatherColors.SunnyGradient.map { it.value }
-        WeatherType.CLOUDY -> WeatherColors.CloudyGradient.map { it.value }
-        WeatherType.RAINY -> WeatherColors.RainyGradient.map { it.value }
-        WeatherType.SNOW -> WeatherColors.SnowGradient.map { it.value }
-        WeatherType.STORMY -> WeatherColors.StormyGradient.map { it.value }
-        WeatherType.FOGGY -> WeatherColors.FoggyGradient.map { it.value }
+        WeatherType.SUNNY -> WeatherColors.SunnyGradient.map { it.value.toULong() }
+        WeatherType.CLOUDY -> WeatherColors.CloudyGradient.map { it.value.toULong() }
+        WeatherType.RAINY -> WeatherColors.RainyGradient.map { it.value.toULong() }
+        WeatherType.SNOW -> WeatherColors.SnowGradient.map { it.value.toULong() }
+        WeatherType.STORMY -> WeatherColors.StormyGradient.map { it.value.toULong() }
+        WeatherType.FOGGY -> WeatherColors.FoggyGradient.map { it.value.toULong() }
     }
 } 

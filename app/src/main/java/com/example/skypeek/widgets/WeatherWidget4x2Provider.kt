@@ -77,26 +77,7 @@ class WeatherWidget4x2Provider : AppWidgetProvider() {
         val mainPendingIntent = PendingIntent.getBroadcast(
             context, 0, mainIntent, PendingIntent.FLAG_IMMUTABLE
         )
-        views.setOnClickPendingIntent(R.id.widget_main_content, mainPendingIntent)
-        
-        // Hourly section click - open to hourly view
-        val hourlyIntent = Intent(context, WeatherWidget4x2Provider::class.java).apply {
-            action = ACTION_HOURLY_CLICK
-        }
-        val hourlyPendingIntent = PendingIntent.getBroadcast(
-            context, 1, hourlyIntent, PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_hourly_section, hourlyPendingIntent)
-        
-        // Refresh click
-        val refreshIntent = Intent(context, WeatherWidget4x2Provider::class.java).apply {
-            action = ACTION_WIDGET_REFRESH
-        }
-        val refreshPendingIntent = PendingIntent.getBroadcast(
-            context, 2, refreshIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_refresh, refreshPendingIntent)
+        views.setOnClickPendingIntent(R.id.widget_root, mainPendingIntent)
     }
     
     companion object {

@@ -76,16 +76,6 @@ class WeatherWidget4x1Provider : AppWidgetProvider() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         views.setOnClickPendingIntent(R.id.widget_root, mainPendingIntent)
-        
-        // Refresh click
-        val refreshIntent = Intent(context, WeatherWidget4x1Provider::class.java).apply {
-            action = ACTION_WIDGET_REFRESH
-        }
-        val refreshPendingIntent = PendingIntent.getBroadcast(
-            context, 1, refreshIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        views.setOnClickPendingIntent(R.id.widget_refresh, refreshPendingIntent)
     }
     
     companion object {

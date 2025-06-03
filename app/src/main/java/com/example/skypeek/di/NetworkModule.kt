@@ -9,6 +9,8 @@ import com.example.skypeek.data.local.database.WeatherDatabase
 import com.example.skypeek.data.remote.api.OpenMeteoApi
 import com.example.skypeek.data.remote.api.OpenWeatherMapApi
 import com.example.skypeek.data.remote.api.WeatherApiService
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,6 +28,14 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+    
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return GsonBuilder()
+            .setLenient()
+            .create()
+    }
     
     @Provides
     @Singleton
@@ -70,33 +80,33 @@ object NetworkModule {
     @Provides
     @Singleton
     @Named("OpenMeteoRetrofit")
-    fun provideOpenMeteoRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideOpenMeteoRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.open-meteo.com/")
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
     
     @Provides
     @Singleton
     @Named("WeatherApiRetrofit")
-    fun provideWeatherApiRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideWeatherApiRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.weatherapi.com/")
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
     
     @Provides
     @Singleton
     @Named("OpenWeatherMapRetrofit")
-    fun provideOpenWeatherMapRetrofit(okHttpClient: OkHttpClient): Retrofit {
+    fun provideOpenWeatherMapRetrofit(okHttpClient: OkHttpClient, gson: Gson): Retrofit {
         return Retrofit.Builder()
             .baseUrl("https://api.openweathermap.org/")
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
     
