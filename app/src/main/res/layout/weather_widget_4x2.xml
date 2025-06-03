@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background_4x2"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- Top Row: City and Main Weather -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Left: City and Condition -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_city_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="San Jose"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:fontFamily="sans-serif-light" />
+
+            <TextView
+                android:id="@+id/widget_condition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Partly Cloudy"
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Center: Weather Icon -->
+        <TextView
+            android:id="@+id/widget_weather_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⛅"
+            android:textSize="32sp"
+            android:layout_marginHorizontal="8dp" />
+
+        <!-- Right: Temperature and High/Low -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/widget_temperature"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="22°"
+                android:textColor="#FFFFFF"
+                android:textSize="24sp"
+                android:fontFamily="sans-serif-ultralight" />
+
+            <TextView
+                android:id="@+id/widget_high_low"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="H:25° L:18°"
+                android:textColor="#CCFFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif-light" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Bottom Row: Hourly Forecast -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+
+        <!-- Hour 1 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour1_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Now"
+                android:textColor="#CCFFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+            <TextView
+                android:id="@+id/widget_hour1_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☀️"
+                android:textSize="16sp"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour1_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="22°"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour2_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+            <TextView
+                android:id="@+id/widget_hour2_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⛅"
+                android:textSize="16sp"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour2_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="24°"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 3 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour3_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+            <TextView
+                android:id="@+id/widget_hour3_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☁️"
+                android:textSize="16sp"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour3_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="23°"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 4 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour4_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+            <TextView
+                android:id="@+id/widget_hour4_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌧️"
+                android:textSize="16sp"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour4_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="21°"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout> 

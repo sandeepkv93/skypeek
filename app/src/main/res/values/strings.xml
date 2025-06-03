@@ -1,3 +1,28 @@
 <resources>
     <string name="app_name">SkyPeek</string>
+    
+    <!-- Widget Descriptions -->
+    <string name="widget_4x1_description">Compact weather widget showing current conditions</string>
+    <string name="widget_4x2_description">Detailed weather widget with hourly forecast</string>
+    
+    <!-- Weather Conditions -->
+    <string name="loading_weather">Loading weather data…</string>
+    <string name="weather_error">Unable to load weather</string>
+    <string name="retry">Retry</string>
+    <string name="updating">Updating…</string>
+    
+    <!-- Location -->
+    <string name="my_location">MY LOCATION</string>
+    <string name="location_permission_title">Location Permission</string>
+    <string name="location_permission_message">SkyPeek needs location access to provide accurate weather information for your current location.</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="cancel">Cancel</string>
+    
+    <!-- Forecast -->
+    <string name="ten_day_forecast">10-DAY FORECAST</string>
+    <string name="hourly_forecast">HOURLY FORECAST</string>
+    
+    <!-- Time -->
+    <string name="now">Now</string>
+    <string name="today">Today</string>
 </resources>

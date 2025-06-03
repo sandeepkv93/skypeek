@@ -1,6 +1,8 @@
 package com.example.skypeek.di
 
+import com.example.skypeek.data.repository.LocationRepositoryImpl
 import com.example.skypeek.data.repository.WeatherRepositoryImpl
+import com.example.skypeek.domain.repository.LocationRepository
 import com.example.skypeek.domain.repository.WeatherRepository
 import dagger.Binds
 import dagger.Module
@@ -17,4 +19,10 @@ abstract class RepositoryModule {
     abstract fun bindWeatherRepository(
         weatherRepositoryImpl: WeatherRepositoryImpl
     ): WeatherRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindLocationRepository(
+        locationRepositoryImpl: LocationRepositoryImpl
+    ): LocationRepository
 } 
