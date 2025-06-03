@@ -138,40 +138,48 @@ private fun RainAnimation(modifier: Modifier = Modifier) {
 private fun SunAnimation(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "sun_glow")
     
+    // Very subtle glow animation - more like iOS
     val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.1f,
-        targetValue = 0.3f,
+        initialValue = 0.05f,
+        targetValue = 0.15f,
         animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = EaseInOut),
+            animation = tween(6000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glow_alpha"
     )
     
     val glowRadius by infiniteTransition.animateFloat(
-        initialValue = 100f,
-        targetValue = 150f,
+        initialValue = 80f,
+        targetValue = 120f,
         animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = EaseInOut),
+            animation = tween(8000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glow_radius"
     )
     
     Canvas(modifier = modifier) {
-        val center = Offset(size.width * 0.7f, size.height * 0.2f)
+        val center = Offset(size.width * 0.75f, size.height * 0.15f)
         
-        // Draw sun glow effect
+        // Outer glow - very subtle
         drawCircle(
-            color = Color.White.copy(alpha = glowAlpha),
+            color = Color.White.copy(alpha = glowAlpha * 0.3f),
+            radius = glowRadius * 1.5f,
+            center = center
+        )
+        
+        // Middle glow
+        drawCircle(
+            color = Color.White.copy(alpha = glowAlpha * 0.5f),
             radius = glowRadius,
             center = center
         )
         
-        // Draw sun core
+        // Inner subtle glow
         drawCircle(
-            color = Color.White.copy(alpha = 0.4f),
-            radius = 60f,
+            color = Color.White.copy(alpha = glowAlpha),
+            radius = glowRadius * 0.6f,
             center = center
         )
     }
@@ -194,11 +202,41 @@ private class RaindropState(
 
 private fun getWeatherGradient(weatherType: WeatherType): List<ULong> {
     return when (weatherType) {
-        WeatherType.SUNNY -> WeatherColors.SunnyGradient.map { it.value.toULong() }
-        WeatherType.CLOUDY -> WeatherColors.CloudyGradient.map { it.value.toULong() }
-        WeatherType.RAINY -> WeatherColors.RainyGradient.map { it.value.toULong() }
-        WeatherType.SNOW -> WeatherColors.SnowGradient.map { it.value.toULong() }
-        WeatherType.STORMY -> WeatherColors.StormyGradient.map { it.value.toULong() }
-        WeatherType.FOGGY -> WeatherColors.FoggyGradient.map { it.value.toULong() }
+        WeatherType.SUNNY -> listOf(
+            0xFF4A90E2UL,  // Bright blue at top
+            0xFF87CEEDUL,  // Sky blue
+            0xFF98D8E8UL,  // Light blue
+            0xFFFFF8F0UL   // Very light cream at bottom
+        )
+        WeatherType.CLOUDY -> listOf(
+            0xFF8E9AAF,    // Cool gray-blue
+            0xFFA8B4C7,    // Light gray-blue  
+            0xFFCBD2E1,    // Very light gray-blue
+            0xFFF1F3F6     // Off-white
+        ).map { it.toULong() }
+        WeatherType.RAINY -> listOf(
+            0xFF2F4858,    // Dark blue-gray
+            0xFF4A6741,    // Deeper gray-blue
+            0xFF5D7A89,    // Medium gray-blue
+            0xFF8FA7B7     // Light gray-blue
+        ).map { it.toULong() }
+        WeatherType.SNOW -> listOf(
+            0xFFB8C6DB,    // Light blue-gray
+            0xFFD1DCE8,    // Very light blue-gray
+            0xFFE8EDF4,    // Almost white blue
+            0xFFFAFBFC     // Pure white
+        ).map { it.toULong() }
+        WeatherType.STORMY -> listOf(
+            0xFF1C1C1C,    // Very dark
+            0xFF2F2F35,    // Dark gray
+            0xFF4A4A50,    // Medium dark gray
+            0xFF6A6A70     // Lighter dark gray
+        ).map { it.toULong() }
+        WeatherType.FOGGY -> listOf(
+            0xFF6B7280,    // Gray
+            0xFF8B92A5,    // Light gray
+            0xFFB1B8CA,    // Lighter gray
+            0xFFD5D9E4     // Very light gray
+        ).map { it.toULong() }
     }
 } 

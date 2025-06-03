@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skypeek.domain.model.LocationData
 import com.example.skypeek.domain.repository.WeatherRepository
+import com.example.skypeek.domain.repository.LocationRepository
 import com.example.skypeek.presentation.ui.WeatherScreenState
 import com.example.skypeek.presentation.ui.WeatherUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
-    private val weatherRepository: WeatherRepository
+    private val weatherRepository: WeatherRepository,
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
 
     private val _screenState = MutableStateFlow(WeatherScreenState())
@@ -23,6 +25,9 @@ class WeatherViewModel @Inject constructor(
 
     private val _savedLocations = MutableStateFlow<List<LocationData>>(emptyList())
     val savedLocations: StateFlow<List<LocationData>> = _savedLocations.asStateFlow()
+
+    private val _showMenu = MutableStateFlow(false)
+    val showMenu: StateFlow<Boolean> = _showMenu.asStateFlow()
 
     init {
         loadDefaultLocation()
@@ -214,12 +219,22 @@ class WeatherViewModel @Inject constructor(
      */
     fun updateCurrentLocation(latitude: Double, longitude: Double) {
         viewModelScope.launch {
-            val currentLocation = LocationData(
-                latitude = latitude,
-                longitude = longitude,
-                cityName = "Current Location",
-                country = "",
-                isCurrentLocation = true
+            // Use LocationRepository to get actual city name via reverse geocoding
+            val locationResult = locationRepository.reverseGeocode(latitude, longitude)
+            
+            val currentLocation = locationResult.fold(
+                onSuccess = { geocodedLocation ->
+                    geocodedLocation.copy(isCurrentLocation = true)
+                },
+                onFailure = {
+                    LocationData(
+                        latitude = latitude,
+                        longitude = longitude,
+                        cityName = "Current Location",
+                        country = "",
+                        isCurrentLocation = true
+                    )
+                }
             )
             
             val currentLocations = _savedLocations.value.toMutableList()
@@ -255,5 +270,16 @@ class WeatherViewModel @Inject constructor(
             weatherRepository.clearCache()
             refreshAllWeather()
         }
+    }
+
+    /**
+     * Show/hide menu
+     */
+    fun toggleMenu() {
+        _showMenu.value = !_showMenu.value
+    }
+    
+    fun hideMenu() {
+        _showMenu.value = false
     }
 } 

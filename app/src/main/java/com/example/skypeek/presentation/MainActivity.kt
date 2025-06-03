@@ -31,6 +31,7 @@ import com.google.android.gms.location.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
+import com.example.skypeek.presentation.ui.components.SettingsBottomSheet
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -86,6 +87,7 @@ fun WeatherApp(
     onLocationRequest: () -> Unit
 ) {
     val screenState by viewModel.screenState.collectAsStateWithLifecycle()
+    val showMenu by viewModel.showMenu.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     
@@ -140,7 +142,7 @@ fun WeatherApp(
                             weatherData = weatherState.weather,
                             onRefresh = { viewModel.refreshWeatherAtIndex(page) },
                             onMapClick = { /* Handle map click */ },
-                            onMenuClick = { /* Handle menu click */ }
+                            onMenuClick = { viewModel.toggleMenu() }
                         )
                     }
                     is WeatherUiState.Error -> {
@@ -171,6 +173,25 @@ fun WeatherApp(
         if (screenState.isRefreshing) {
             RefreshIndicator(
                 modifier = Modifier.align(Alignment.TopCenter)
+            )
+        }
+        
+        // Settings bottom sheet
+        if (showMenu) {
+            SettingsBottomSheet(
+                onDismiss = { viewModel.hideMenu() },
+                onAddLocation = {
+                    // TODO: Implement add location functionality
+                },
+                onManageLocations = {
+                    // TODO: Implement manage locations functionality  
+                },
+                onSettings = {
+                    // TODO: Implement settings screen
+                },
+                onAbout = {
+                    // TODO: Implement about dialog
+                }
             )
         }
     }

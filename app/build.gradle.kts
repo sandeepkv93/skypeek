@@ -30,7 +30,7 @@ android {
         debug {
             isDebuggable = true
             applicationIdSuffix = ".debug"
-            manifestPlaceholders["appName"] = "SkyPeek Debug"
+            manifestPlaceholders["appName"] = "SkyPeek"
         }
         release {
             isMinifyEnabled = true
