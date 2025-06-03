@@ -6,23 +6,26 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.location.LocationManager
 import android.widget.RemoteViews
 import com.example.skypeek.R
 import com.example.skypeek.presentation.MainActivity
 import com.example.skypeek.domain.repository.WeatherRepository
 import com.example.skypeek.domain.model.WeatherData
-import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.inject.Inject
 
-@AndroidEntryPoint
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface WeatherWidgetEntryPoint {
+    fun weatherRepository(): WeatherRepository
+}
+
 class WeatherWidget5x1Provider : AppWidgetProvider() {
-    
-    @Inject
-    lateinit var weatherRepository: WeatherRepository
     
     override fun onUpdate(
         context: Context,
@@ -81,6 +84,12 @@ class WeatherWidget5x1Provider : AppWidgetProvider() {
         // Fetch weather data asynchronously
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                val hiltEntryPoint = EntryPointAccessors.fromApplication(
+                    context.applicationContext,
+                    WeatherWidgetEntryPoint::class.java
+                )
+                val weatherRepository = hiltEntryPoint.weatherRepository()
+                
                 val location = getCurrentLocation(context)
                 if (location != null) {
                     val weatherResult = weatherRepository.getWeatherData(
