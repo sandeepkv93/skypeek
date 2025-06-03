@@ -89,7 +89,7 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
             setTextViewText(R.id.widget_city_name, weather.location.cityName)
             setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
             setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
-            setTextViewText(R.id.widget_weather_icon, weather.currentWeather.icon)
+            setImageViewResource(R.id.widget_weather_icon, getWeatherIconResource(weather.currentWeather.weatherCode))
         }
         
         val appWidgetManager = AppWidgetManager.getInstance(this)
@@ -107,7 +107,7 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
                 R.id.widget_high_low,
                 "H:${weather.currentWeather.highTemp}° L:${weather.currentWeather.lowTemp}°"
             )
-            setTextViewText(R.id.widget_weather_icon, weather.currentWeather.icon)
+            setImageViewResource(R.id.widget_weather_icon, getWeatherIconResource(weather.currentWeather.weatherCode))
             
             // Update hourly forecast
             updateWidget4x2Hourly(this, weather.hourlyForecast.take(4))
@@ -129,7 +129,7 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
             if (index < hourlyViews.size) {
                 val (timeId, iconId, tempId) = hourlyViews[index]
                 views.setTextViewText(timeId, hour.time)
-                views.setTextViewText(iconId, hour.icon)
+                views.setImageViewResource(iconId, getWeatherIconResource(hour.weatherCode))
                 views.setTextViewText(tempId, "${hour.temperature}°")
             }
         }

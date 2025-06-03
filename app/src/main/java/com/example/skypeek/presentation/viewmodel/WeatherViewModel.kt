@@ -287,6 +287,17 @@ class WeatherViewModel @Inject constructor(
     }
 
     /**
+     * Search for locations by name
+     */
+    suspend fun searchLocations(query: String): List<LocationData> {
+        return try {
+            locationRepository.searchLocations(query)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
      * Clear cache and refresh
      */
     fun clearCacheAndRefresh() {

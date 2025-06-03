@@ -21,13 +21,13 @@
         android:fontFamily="sans-serif-light" />
 
     <!-- Weather Icon -->
-    <TextView
+    <ImageView
         android:id="@+id/widget_weather_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
         android:layout_centerInParent="true"
-        android:text="☀️"
-        android:textSize="24sp" />
+        android:src="@drawable/ic_sunny"
+        android:scaleType="fitCenter" />
 
     <!-- Temperature -->
     <TextView

@@ -232,11 +232,15 @@ fun WeatherApp(
                 onNavigateBack = { currentScreen = "weather" },
                 onSearchLocations = { query ->
                     isSearching = true
-                    // TODO: Implement actual search
                     coroutineScope.launch {
-                        kotlinx.coroutines.delay(1000) // Simulate search
-                        searchResults = emptyList() // Placeholder
-                        isSearching = false
+                        try {
+                            val results = viewModel.searchLocations(query)
+                            searchResults = results
+                        } catch (e: Exception) {
+                            searchResults = emptyList()
+                        } finally {
+                            isSearching = false
+                        }
                     }
                 },
                 searchResults = searchResults,
