@@ -36,38 +36,46 @@ fun WeatherIcon(
 @Composable
 fun SunnyIcon(
     modifier: Modifier = Modifier,
-    color: Color = Color(0xFFFFD700) // Golden yellow like iOS
+    color: Color = Color(0xFFFFCC33) // iOS-style golden yellow
 ) {
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
-        val radius = size.minDimension * 0.25f
-        val rayLength = size.minDimension * 0.15f
-        val rayWidth = size.minDimension * 0.03f
+        val centerRadius = size.minDimension * 0.22f
+        val rayLength = size.minDimension * 0.18f
+        val rayWidth = size.minDimension * 0.025f
         
-        // Draw sun rays (8 rays like iOS)
+        // Draw 8 sun rays exactly like iOS - rounded ends
         for (i in 0 until 8) {
             val angle = (i * 45.0) * PI / 180.0
-            val startRadius = radius + size.minDimension * 0.05f
-            val endRadius = startRadius + rayLength
+            val innerRadius = centerRadius + size.minDimension * 0.08f
+            val outerRadius = innerRadius + rayLength
             
-            val startX = center.x + (startRadius * cos(angle)).toFloat()
-            val startY = center.y + (startRadius * sin(angle)).toFloat()
-            val endX = center.x + (endRadius * cos(angle)).toFloat()
-            val endY = center.y + (endRadius * sin(angle)).toFloat()
+            val startX = center.x + (innerRadius * cos(angle)).toFloat()
+            val startY = center.y + (innerRadius * sin(angle)).toFloat()
+            val endX = center.x + (outerRadius * cos(angle)).toFloat()
+            val endY = center.y + (outerRadius * sin(angle)).toFloat()
             
             drawLine(
                 color = color,
                 start = Offset(startX, startY),
                 end = Offset(endX, endY),
-                strokeWidth = rayWidth
+                strokeWidth = rayWidth,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
             )
         }
         
-        // Draw central sun circle
+        // Draw central sun circle with subtle gradient effect
         drawCircle(
             color = color,
-            radius = radius,
+            radius = centerRadius,
             center = center
+        )
+        
+        // Add inner highlight for depth (iOS effect)
+        drawCircle(
+            color = Color(0xFFFFE55C),
+            radius = centerRadius * 0.6f,
+            center = Offset(center.x - centerRadius * 0.1f, center.y - centerRadius * 0.1f)
         )
     }
 }
@@ -77,41 +85,42 @@ fun PartlyCloudyIcon(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2f, size.height / 2f)
+        // Draw sun behind cloud (iOS positioning)
+        val sunCenter = Offset(size.width * 0.35f, size.height * 0.35f)
+        val sunRadius = size.minDimension * 0.16f
         
-        // Draw sun (smaller, positioned top-right)
-        val sunCenter = Offset(size.width * 0.65f, size.height * 0.35f)
-        val sunRadius = size.minDimension * 0.15f
+        // Sun rays (partial, like iOS)
+        val sunColor = Color(0xFFFFCC33)
+        for (i in listOf(0, 1, 7)) { // Only show visible rays
+            val angle = (i * 45.0) * PI / 180.0
+            val innerRadius = sunRadius + size.minDimension * 0.04f
+            val outerRadius = innerRadius + size.minDimension * 0.12f
+            
+            val startX = sunCenter.x + (innerRadius * cos(angle)).toFloat()
+            val startY = sunCenter.y + (innerRadius * sin(angle)).toFloat()
+            val endX = sunCenter.x + (outerRadius * cos(angle)).toFloat()
+            val endY = sunCenter.y + (outerRadius * sin(angle)).toFloat()
+            
+            drawLine(
+                color = sunColor,
+                start = Offset(startX, startY),
+                end = Offset(endX, endY),
+                strokeWidth = size.minDimension * 0.02f,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        }
         
+        // Sun circle
         drawCircle(
-            color = Color(0xFFFFD700),
+            color = sunColor,
             radius = sunRadius,
             center = sunCenter
         )
         
-        // Draw a few sun rays
-        for (i in 0 until 4) {
-            val angle = (i * 90.0 + 45.0) * PI / 180.0
-            val startRadius = sunRadius + size.minDimension * 0.02f
-            val endRadius = startRadius + size.minDimension * 0.08f
-            
-            val startX = sunCenter.x + (startRadius * cos(angle)).toFloat()
-            val startY = sunCenter.y + (startRadius * sin(angle)).toFloat()
-            val endX = sunCenter.x + (endRadius * cos(angle)).toFloat()
-            val endY = sunCenter.y + (endRadius * sin(angle)).toFloat()
-            
-            drawLine(
-                color = Color(0xFFFFD700),
-                start = Offset(startX, startY),
-                end = Offset(endX, endY),
-                strokeWidth = size.minDimension * 0.02f
-            )
-        }
-        
-        // Draw cloud
-        drawCloud(
-            center = Offset(size.width * 0.45f, size.height * 0.6f),
-            scale = 0.8f
+        // Cloud overlapping sun (iOS style)
+        drawIOSCloud(
+            center = Offset(size.width * 0.58f, size.height * 0.58f),
+            scale = 0.85f
         )
     }
 }
@@ -122,7 +131,7 @@ fun CloudyIcon(
 ) {
     Canvas(modifier = modifier) {
         val center = Offset(size.width / 2f, size.height / 2f)
-        drawCloud(center = center, scale = 1.0f)
+        drawIOSCloud(center = center, scale = 1.0f)
     }
 }
 
@@ -131,23 +140,32 @@ fun RainyIcon(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2f, size.height * 0.4f)
+        val cloudCenter = Offset(size.width / 2f, size.height * 0.4f)
         
         // Draw cloud
-        drawCloud(center = center, scale = 0.9f)
+        drawIOSCloud(center = cloudCenter, scale = 0.9f, color = Color(0xFFDDDDDD))
         
-        // Draw rain drops
-        val dropColor = Color(0xFF4A90E2)
-        for (i in 0 until 3) {
-            val x = size.width * (0.3f + i * 0.2f)
-            val startY = size.height * 0.65f
-            val endY = size.height * 0.85f
+        // Draw rain drops (iOS style - angled and varied)
+        val rainColor = Color(0xFF4A9FFF)
+        val rainDrops = listOf(
+            Pair(0.3f, 0.65f),
+            Pair(0.45f, 0.7f),
+            Pair(0.6f, 0.65f),
+            Pair(0.75f, 0.7f)
+        )
+        
+        rainDrops.forEach { (xRatio, yRatio) ->
+            val startX = size.width * xRatio
+            val startY = size.height * yRatio
+            val endX = startX + size.width * 0.02f
+            val endY = startY + size.height * 0.18f
             
             drawLine(
-                color = dropColor,
-                start = Offset(x, startY),
-                end = Offset(x, endY),
-                strokeWidth = size.minDimension * 0.02f
+                color = rainColor,
+                start = Offset(startX, startY),
+                end = Offset(endX, endY),
+                strokeWidth = size.minDimension * 0.015f,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
             )
         }
     }
@@ -158,18 +176,24 @@ fun SnowyIcon(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2f, size.height * 0.4f)
+        val cloudCenter = Offset(size.width / 2f, size.height * 0.4f)
         
         // Draw cloud
-        drawCloud(center = center, scale = 0.9f, color = Color(0xFFE0E0E0))
+        drawIOSCloud(center = cloudCenter, scale = 0.9f, color = Color(0xFFF0F0F0))
         
-        // Draw snowflakes
+        // Draw snowflakes (iOS style - 6-pointed stars)
         val snowColor = Color.White
-        for (i in 0 until 4) {
-            val x = size.width * (0.25f + i * 0.17f)
-            val y = size.height * (0.65f + (i % 2) * 0.1f)
-            
-            drawSnowflake(Offset(x, y), size.minDimension * 0.03f, snowColor)
+        val snowflakes = listOf(
+            Triple(0.25f, 0.65f, 0.8f),
+            Triple(0.45f, 0.7f, 1.0f),
+            Triple(0.65f, 0.65f, 0.9f),
+            Triple(0.8f, 0.75f, 0.7f)
+        )
+        
+        snowflakes.forEach { (xRatio, yRatio, sizeRatio) ->
+            val center = Offset(size.width * xRatio, size.height * yRatio)
+            val flakeSize = size.minDimension * 0.05f * sizeRatio
+            drawIOSSnowflake(center, flakeSize, snowColor)
         }
     }
 }
@@ -179,26 +203,35 @@ fun StormyIcon(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2f, size.height * 0.4f)
+        val cloudCenter = Offset(size.width / 2f, size.height * 0.4f)
         
-        // Draw dark cloud
-        drawCloud(center = center, scale = 0.9f, color = Color(0xFF4A4A4A))
+        // Draw dark storm cloud
+        drawIOSCloud(center = cloudCenter, scale = 0.95f, color = Color(0xFF666666))
         
-        // Draw lightning bolt
-        val lightningColor = Color(0xFFFFD700)
+        // Draw lightning bolt (iOS style - more realistic zigzag)
+        val lightningColor = Color(0xFFFFE55C)
         val path = Path().apply {
-            moveTo(size.width * 0.45f, size.height * 0.6f)
-            lineTo(size.width * 0.55f, size.height * 0.7f)
-            lineTo(size.width * 0.5f, size.height * 0.7f)
-            lineTo(size.width * 0.6f, size.height * 0.85f)
-            lineTo(size.width * 0.4f, size.height * 0.75f)
-            lineTo(size.width * 0.45f, size.height * 0.75f)
+            // Main lightning bolt path
+            moveTo(size.width * 0.48f, size.height * 0.6f)
+            lineTo(size.width * 0.44f, size.height * 0.7f)
+            lineTo(size.width * 0.5f, size.height * 0.72f)
+            lineTo(size.width * 0.46f, size.height * 0.82f)
+            lineTo(size.width * 0.54f, size.height * 0.75f)
+            lineTo(size.width * 0.5f, size.height * 0.73f)
+            lineTo(size.width * 0.52f, size.height * 0.62f)
             close()
         }
         
         drawPath(
             path = path,
             color = lightningColor
+        )
+        
+        // Add glow effect
+        drawPath(
+            path = path,
+            color = lightningColor.copy(alpha = 0.3f),
+            style = Stroke(width = size.minDimension * 0.02f)
         )
     }
 }
@@ -208,78 +241,120 @@ fun FoggyIcon(
     modifier: Modifier = Modifier
 ) {
     Canvas(modifier = modifier) {
-        val fogColor = Color(0xFFB0B0B0)
+        val fogColor = Color(0xFFCCCCCC)
         
-        // Draw horizontal fog lines
-        for (i in 0 until 4) {
-            val y = size.height * (0.3f + i * 0.15f)
-            val startX = size.width * 0.2f
-            val endX = size.width * 0.8f
+        // Draw horizontal fog lines (iOS style - varying lengths and opacity)
+        val fogLines = listOf(
+            Triple(0.2f, 0.35f, 0.6f), // x start ratio, y ratio, length ratio
+            Triple(0.15f, 0.45f, 0.7f),
+            Triple(0.25f, 0.55f, 0.5f),
+            Triple(0.2f, 0.65f, 0.65f)
+        )
+        
+        fogLines.forEachIndexed { index, (startRatio, yRatio, lengthRatio) ->
+            val alpha = 1.0f - (index * 0.15f)
+            val y = size.height * yRatio
+            val startX = size.width * startRatio
+            val endX = startX + (size.width * lengthRatio)
             
             drawLine(
-                color = fogColor,
+                color = fogColor.copy(alpha = alpha),
                 start = Offset(startX, y),
                 end = Offset(endX, y),
-                strokeWidth = size.minDimension * 0.04f
+                strokeWidth = size.minDimension * 0.035f,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
             )
         }
     }
 }
 
-// Helper function to draw a cloud shape
-private fun DrawScope.drawCloud(
+// iOS-style cloud helper function
+private fun DrawScope.drawIOSCloud(
     center: Offset,
     scale: Float,
     color: Color = Color.White
 ) {
     val baseRadius = size.minDimension * 0.12f * scale
     
-    // Main cloud body (larger circle)
-    drawCircle(
-        color = color,
-        radius = baseRadius,
-        center = center
+    // iOS clouds have a more organic, puffy appearance
+    // Main cloud segments
+    val cloudSegments = listOf(
+        Triple(-0.8f, 0.1f, 0.8f), // left bump
+        Triple(-0.3f, -0.4f, 0.9f), // top left
+        Triple(0.2f, -0.5f, 0.85f), // top right
+        Triple(0.7f, 0.0f, 0.8f), // right bump
+        Triple(0.0f, 0.2f, 1.0f) // main body
     )
     
-    // Left bump
-    drawCircle(
-        color = color,
-        radius = baseRadius * 0.8f,
-        center = Offset(center.x - baseRadius * 0.7f, center.y)
-    )
+    cloudSegments.forEach { (xOffset, yOffset, radiusScale) ->
+        drawCircle(
+            color = color,
+            radius = baseRadius * radiusScale,
+            center = Offset(
+                center.x + baseRadius * xOffset,
+                center.y + baseRadius * yOffset
+            )
+        )
+    }
     
-    // Right bump
+    // Add subtle shadow/depth
     drawCircle(
-        color = color,
-        radius = baseRadius * 0.8f,
-        center = Offset(center.x + baseRadius * 0.7f, center.y)
-    )
-    
-    // Top bump
-    drawCircle(
-        color = color,
-        radius = baseRadius * 0.9f,
-        center = Offset(center.x, center.y - baseRadius * 0.5f)
+        color = color.copy(alpha = 0.3f),
+        radius = baseRadius * 0.7f,
+        center = Offset(center.x + baseRadius * 0.1f, center.y + baseRadius * 0.3f)
     )
 }
 
-// Helper function to draw a snowflake
-private fun DrawScope.drawSnowflake(
+// iOS-style snowflake helper function
+private fun DrawScope.drawIOSSnowflake(
     center: Offset,
-    size: Float,
+    radius: Float,
     color: Color
 ) {
-    // Draw 6 lines radiating from center
+    // Draw 6 main arms
     for (i in 0 until 6) {
         val angle = (i * 60.0) * PI / 180.0
-        val endX = center.x + (size * cos(angle)).toFloat()
-        val endY = center.y + (size * sin(angle)).toFloat()
+        val endX = center.x + (radius * cos(angle)).toFloat()
+        val endY = center.y + (radius * sin(angle)).toFloat()
         
         drawLine(
             color = color,
             start = center,
             end = Offset(endX, endY),
-            strokeWidth = size * 0.1f
+            strokeWidth = radius * 0.15f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        
+        // Add small branches (iOS detail)
+        val branchLength = radius * 0.3f
+        val branchAngle1 = angle + PI / 6
+        val branchAngle2 = angle - PI / 6
+        
+        val branchStart = Offset(
+            center.x + (radius * 0.7f * cos(angle)).toFloat(),
+            center.y + (radius * 0.7f * sin(angle)).toFloat()
+        )
+        
+        drawLine(
+            color = color,
+            start = branchStart,
+            end = Offset(
+                branchStart.x + (branchLength * cos(branchAngle1)).toFloat(),
+                branchStart.y + (branchLength * sin(branchAngle1)).toFloat()
+            ),
+            strokeWidth = radius * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        
+        drawLine(
+            color = color,
+            start = branchStart,
+            end = Offset(
+                branchStart.x + (branchLength * cos(branchAngle2)).toFloat(),
+                branchStart.y + (branchLength * sin(branchAngle2)).toFloat()
+            ),
+            strokeWidth = radius * 0.1f,
+            cap = androidx.compose.ui.graphics.StrokeCap.Round
         )
     }
 } 

@@ -465,41 +465,33 @@ class WeatherRepositoryImpl @Inject constructor(
 
     // Time formatting utilities
     private fun formatHourlyTime(time: String, index: Int): String {
-        return if (index == 0) {
-            "Now"
-        } else {
-            try {
-                val instant = Instant.parse(time)
-                val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-                val hour = localDateTime.hour
-                when {
-                    hour == 0 -> "12AM"
-                    hour < 12 -> "${hour}AM"
-                    hour == 12 -> "12PM"
-                    else -> "${hour - 12}PM"
-                }
-            } catch (e: Exception) {
-                "${index}H"
+        try {
+            val instant = Instant.parse(time)
+            val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+            val hour = localDateTime.hour
+            return when {
+                hour == 0 -> "12AM"
+                hour < 12 -> "${hour}AM"
+                hour == 12 -> "12PM"
+                else -> "${hour - 12}PM"
             }
+        } catch (e: Exception) {
+            return "${index + 1}H"
         }
     }
 
     private fun formatHourlyTimeFromTimestamp(timestamp: Long, isFirst: Boolean): String {
-        return if (isFirst) {
-            "Now"
-        } else {
-            try {
-                val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
-                val hour = calendar.get(Calendar.HOUR_OF_DAY)
-                when {
-                    hour == 0 -> "12AM"
-                    hour < 12 -> "${hour}AM"
-                    hour == 12 -> "12PM"
-                    else -> "${hour - 12}PM"
-                }
-            } catch (e: Exception) {
-                "Hour"
+        try {
+            val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            return when {
+                hour == 0 -> "12AM"
+                hour < 12 -> "${hour}AM"
+                hour == 12 -> "12PM"
+                else -> "${hour - 12}PM"
             }
+        } catch (e: Exception) {
+            return "Hour"
         }
     }
 
