@@ -4,6 +4,8 @@
     <!-- Widget Descriptions -->
     <string name="widget_4x1_description">Compact weather widget showing current conditions</string>
     <string name="widget_4x2_description">Detailed weather widget with hourly forecast</string>
+    <string name="widget_5x1_description">Extended weather widget with current conditions and 3-hour forecast</string>
+    <string name="widget_5x2_description">Comprehensive weather widget with 6-hour forecast and tomorrow\'s weather</string>
     
     <!-- Weather Conditions -->
     <string name="loading_weather">Loading weather data…</string>

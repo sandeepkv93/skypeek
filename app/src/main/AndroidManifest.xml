@@ -65,6 +65,35 @@
                 android:resource="@xml/weather_widget_4x2_info" />
         </receiver>
 
+        <receiver
+            android:name=".widgets.WeatherWidget5x1Provider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.skypeek.WIDGET_5X1_REFRESH" />
+                <action android:name="com.example.skypeek.WIDGET_5X1_CLICK" />
+                <action android:name="com.example.skypeek.WIDGET_5X1_HOURLY_CLICK" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_5x1_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widgets.WeatherWidget5x2Provider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.skypeek.WIDGET_5X2_REFRESH" />
+                <action android:name="com.example.skypeek.WIDGET_5X2_CLICK" />
+                <action android:name="com.example.skypeek.WIDGET_5X2_HOURLY_CLICK" />
+                <action android:name="com.example.skypeek.WIDGET_5X2_FORECAST_CLICK" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_5x2_info" />
+        </receiver>
+
         <!-- Widget Configuration Activity -->
         <activity
             android:name=".widgets.WeatherWidgetConfigActivity"
