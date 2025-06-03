@@ -55,13 +55,15 @@ class WeatherWidget4x2Provider : AppWidgetProvider() {
     ) {
         val views = RemoteViews(context.packageName, R.layout.weather_widget_4x2)
         
-        // Start the widget service to update data
-        val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
-            action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_4X2)
+        // FIXED: Update widget directly instead of starting background service
+        // Set default/placeholder content
+        views.apply {
+            setTextViewText(R.id.widget_city_name, "Weather")
+            setTextViewText(R.id.widget_temperature, "--°")
+            setTextViewText(R.id.widget_condition, "Loading...")
+            setTextViewText(R.id.widget_high_low, "H:--° L:--°")
+            setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
         }
-        context.startService(serviceIntent)
         
         // Set up click handlers
         setupWidget4x2ClickHandlers(context, views)

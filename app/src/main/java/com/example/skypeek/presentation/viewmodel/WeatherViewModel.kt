@@ -39,11 +39,21 @@ class WeatherViewModel @Inject constructor(
      */
     private fun requestCurrentLocationFirst() {
         viewModelScope.launch {
-            // Show loading state
-            _screenState.value = _screenState.value.copy(
-                weatherStates = listOf(WeatherUiState.Loading),
-                showLocationDialog = true // Request location permission
-            )
+            // Check if we have location permission
+            if (locationRepository.hasLocationPermission()) {
+                // Try to get current location
+                val locationResult = locationRepository.getCurrentLocation()
+                if (locationResult.isSuccess) {
+                    val currentLocation = locationResult.getOrThrow()
+                    loadWeatherForLocations(listOf(currentLocation))
+                } else {
+                    // Failed to get current location, use default
+                    loadDefaultLocation()
+                }
+            } else {
+                // No permission, start with default location
+                loadDefaultLocation()
+            }
         }
     }
 
@@ -316,5 +326,12 @@ class WeatherViewModel @Inject constructor(
     
     fun hideMenu() {
         _showMenu.value = false
+    }
+
+    /**
+     * Request location permission and update current location
+     */
+    fun requestLocationPermission() {
+        _screenState.value = _screenState.value.copy(showLocationDialog = true)
     }
 } 

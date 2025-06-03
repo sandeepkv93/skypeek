@@ -69,43 +69,44 @@ fun SkyPeekTheme(
 // Additional colors for weather states
 object WeatherColors {
     val SunnyGradient = listOf(
-        Color(0xFF5A9FD4), // Softer blue
-        Color(0xFF7BB3E0)  // Medium blue
+        Color(0xFF4A8BC2), // Softer, more muted blue
+        Color(0xFF6BA3D0), // Gentler blue
+        Color(0xFF87BFDD)  // Very soft blue
     )
     
     val CloudyGradient = listOf(
-        Color(0xFF6B7A8A), // Muted gray-blue
-        Color(0xFF7D8C9C), // Slightly lighter gray-blue
-        Color(0xFF9FAAB5)  // Light gray-blue
+        Color(0xFF5A6B7A), // More muted gray-blue
+        Color(0xFF6B7C8B), // Slightly lighter muted gray-blue
+        Color(0xFF8A9BA5)  // Softer light gray-blue
     )
     
     val RainyGradient = listOf(
-        Color(0xFF3A4A5C), // Dark muted blue-gray
-        Color(0xFF4A5A6C), // Medium dark gray-blue
-        Color(0xFF5A6A7C)  // Medium gray-blue
+        Color(0xFF3A4751), // Darker muted blue-gray
+        Color(0xFF4A5762), // Medium dark muted gray-blue
+        Color(0xFF5A6B76)  // Softer medium gray-blue
     )
     
     val SnowGradient = listOf(
-        Color(0xFF9BB0C4), // Soft blue-gray
-        Color(0xFFB1C6DA), // Light blue-gray
-        Color(0xFFC7DCF0)  // Very light blue
+        Color(0xFF8AA5B9), // Very soft blue-gray
+        Color(0xFFA1BBCF), // Gentle light blue-gray
+        Color(0xFFB8D1E5)  // Subtle very light blue
     )
     
     val StormyGradient = listOf(
-        Color(0xFF2A2A2F), // Dark but not black
-        Color(0xFF3A3A40), // Medium dark gray
-        Color(0xFF4A4A50)  // Lighter dark gray
+        Color(0xFF1A1A1F), // Very dark but not harsh
+        Color(0xFF2A2A30), // Medium dark gray with warmth
+        Color(0xFF3A3A40)  // Lighter dark gray
     )
     
     val FoggyGradient = listOf(
-        Color(0xFF5A6670), // Muted gray
-        Color(0xFF6A7680), // Light muted gray
-        Color(0xFF8A96A0)  // Lighter gray
+        Color(0xFF4A5660), // Softer muted gray
+        Color(0xFF5A6670), // Gentler light muted gray
+        Color(0xFF7A8690)  // Subtle lighter gray
     )
     
-    // Text colors for weather overlays - slightly more transparent for elegance
-    val WeatherTextPrimary = Color.White.copy(alpha = 0.95f)
-    val WeatherTextSecondary = Color.White.copy(alpha = 0.85f)
-    val WeatherTextTertiary = Color.White.copy(alpha = 0.75f)
-    val WeatherTextQuaternary = Color.White.copy(alpha = 0.55f)
+    // Text colors for weather overlays - more subtle and iOS-like
+    val WeatherTextPrimary = Color.White.copy(alpha = 0.92f)
+    val WeatherTextSecondary = Color.White.copy(alpha = 0.78f)
+    val WeatherTextTertiary = Color.White.copy(alpha = 0.65f)
+    val WeatherTextQuaternary = Color.White.copy(alpha = 0.45f)
 } 

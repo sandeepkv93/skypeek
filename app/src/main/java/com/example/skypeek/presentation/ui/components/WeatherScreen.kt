@@ -142,6 +142,7 @@ private fun MainTemperatureDisplay(
         WeatherIcon(
             weatherCode = weatherCode,
             size = 120.dp,
+            timestamp = System.currentTimeMillis(), // Use current time for proper night detection
             modifier = Modifier.padding(bottom = 20.dp)
         )
         
@@ -222,6 +223,7 @@ private fun HourlyForecastItem(
         WeatherIcon(
             weatherCode = hour.weatherCode,
             size = 30.dp,
+            timestamp = hour.timestamp,
             modifier = Modifier.height(35.dp)
         )
         
@@ -289,14 +291,15 @@ private fun DailyForecastRow(
             modifier = Modifier.width(80.dp)
         )
         
-        // Weather icon
+        // Weather icon - use midday timestamp (12 PM) for daily weather
         Box(
             modifier = Modifier.width(40.dp),
             contentAlignment = Alignment.Center
         ) {
             WeatherIcon(
                 weatherCode = day.weatherCode,
-                size = 28.dp
+                size = 28.dp,
+                timestamp = createMiddayTimestamp() // Use midday for daily forecast icons
             )
         }
         
@@ -326,6 +329,17 @@ private fun DailyForecastRow(
             textAlign = TextAlign.End
         )
     }
+}
+
+// Helper function to create midday timestamp for daily weather icons
+private fun createMiddayTimestamp(): Long {
+    val calendar = java.util.Calendar.getInstance().apply {
+        set(java.util.Calendar.HOUR_OF_DAY, 12) // 12 PM midday
+        set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0)
+        set(java.util.Calendar.MILLISECOND, 0)
+    }
+    return calendar.timeInMillis
 }
 
 @Composable

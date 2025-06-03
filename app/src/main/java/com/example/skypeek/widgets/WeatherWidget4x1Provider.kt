@@ -9,10 +9,6 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.example.skypeek.R
 import com.example.skypeek.presentation.MainActivity
-import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 class WeatherWidget4x1Provider : AppWidgetProvider() {
     
@@ -52,35 +48,35 @@ class WeatherWidget4x1Provider : AppWidgetProvider() {
     ) {
         val views = RemoteViews(context.packageName, R.layout.weather_widget_4x1)
         
-        // Start the widget service to update data
-        val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
-            action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-            putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_4X1)
+        // FIXED: Update widget directly instead of starting background service
+        // Set default/placeholder content
+        views.apply {
+            setTextViewText(R.id.widget_city_name, "Weather")
+            setTextViewText(R.id.widget_temperature, "--°")
+            setTextViewText(R.id.widget_condition, "Loading...")
+            setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
         }
-        context.startService(serviceIntent)
         
         // Set up click handlers
-        setupClickHandlers(context, views)
+        setupWidget4x1ClickHandlers(context, views)
         
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
     
-    private fun setupClickHandlers(context: Context, views: RemoteViews) {
+    private fun setupWidget4x1ClickHandlers(context: Context, views: RemoteViews) {
         // Main widget click - open app
         val mainIntent = Intent(context, WeatherWidget4x1Provider::class.java).apply {
             action = ACTION_WIDGET_CLICK
         }
         val mainPendingIntent = PendingIntent.getBroadcast(
-            context, 0, mainIntent, 
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            context, 0, mainIntent, PendingIntent.FLAG_IMMUTABLE
         )
         views.setOnClickPendingIntent(R.id.widget_root, mainPendingIntent)
     }
     
     companion object {
-        const val ACTION_WIDGET_REFRESH = "com.example.skypeek.WIDGET_REFRESH"
-        const val ACTION_WIDGET_CLICK = "com.example.skypeek.WIDGET_CLICK"
+        const val ACTION_WIDGET_REFRESH = "com.example.skypeek.WIDGET_4X1_REFRESH"
+        const val ACTION_WIDGET_CLICK = "com.example.skypeek.WIDGET_4X1_CLICK"
         
         fun updateAllWidgets(context: Context) {
             val intent = Intent(context, WeatherWidget4x1Provider::class.java).apply {

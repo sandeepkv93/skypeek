@@ -159,6 +159,15 @@ class WeatherRepositoryImpl @Inject constructor(
         val current = response.current
         val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(current.weatherCode)
         
+        // 🔍 DEBUG: Add extensive logging for Open-Meteo response
+        println("🌤️ OPEN-METEO API RESPONSE DEBUG:")
+        println("   Current Weather Code: ${current.weatherCode}")
+        println("   Current Temperature: ${current.temperature2m}")
+        println("   Current Condition: ${weatherInfo.description}")
+        println("   Hourly Weather Codes (first 6): ${response.hourly.weatherCode.take(6)}")
+        println("   Daily Weather Codes: ${response.daily.weatherCode}")
+        println("   Raw API Response: $response")
+        
         return WeatherData(
             location = LocationData(
                 latitude = latitude,
@@ -192,6 +201,10 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private fun mapOpenMeteoHourlyForecast(hourly: com.example.skypeek.data.remote.dto.OpenMeteoHourlyForecast): List<HourlyWeather> {
+        // 🔍 DEBUG: Check what hourly weather codes we're getting
+        println("🔍 HOURLY FORECAST DEBUG:")
+        println("   First 10 hourly codes: ${hourly.weatherCode.take(10)}")
+        
         return hourly.time.take(24).mapIndexed { index, time ->
             val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(hourly.weatherCode[index])
             HourlyWeather(
@@ -207,6 +220,10 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private fun mapOpenMeteoDailyForecast(daily: com.example.skypeek.data.remote.dto.OpenMeteoDailyForecast): List<DailyWeather> {
+        // 🔍 DEBUG: Check what daily weather codes we're getting
+        println("🔍 DAILY FORECAST DEBUG:")
+        println("   All daily codes: ${daily.weatherCode}")
+        
         return daily.time.mapIndexed { index, date ->
             val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(daily.weatherCode[index])
             DailyWeather(
@@ -465,33 +482,56 @@ class WeatherRepositoryImpl @Inject constructor(
 
     // Time formatting utilities
     private fun formatHourlyTime(time: String, index: Int): String {
-        try {
+        return try {
             val instant = Instant.parse(time)
             val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
             val hour = localDateTime.hour
-            return when {
+            val minute = localDateTime.minute
+            
+            // Always show proper time format
+            when {
+                hour == 0 -> if (minute == 0) "12AM" else String.format(Locale.US, "12:%02dAM", minute)
+                hour < 12 -> if (minute == 0) "${hour}AM" else String.format(Locale.US, "%d:%02dAM", hour, minute)
+                hour == 12 -> if (minute == 0) "12PM" else String.format(Locale.US, "12:%02dPM", minute)
+                else -> if (minute == 0) "${hour - 12}PM" else String.format(Locale.US, "%d:%02dPM", hour - 12, minute)
+            }
+        } catch (e: Exception) {
+            // Fallback to current time if parsing fails
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.HOUR_OF_DAY, index)
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            when {
                 hour == 0 -> "12AM"
                 hour < 12 -> "${hour}AM"
                 hour == 12 -> "12PM"
                 else -> "${hour - 12}PM"
             }
-        } catch (e: Exception) {
-            return "${index + 1}H"
         }
     }
 
     private fun formatHourlyTimeFromTimestamp(timestamp: Long, isFirst: Boolean): String {
-        try {
+        return try {
             val calendar = Calendar.getInstance().apply { timeInMillis = timestamp }
             val hour = calendar.get(Calendar.HOUR_OF_DAY)
-            return when {
+            val minute = calendar.get(Calendar.MINUTE)
+            
+            // Always show proper time format for all hours
+            when {
+                hour == 0 -> if (minute == 0) "12AM" else String.format(Locale.US, "12:%02dAM", minute)
+                hour < 12 -> if (minute == 0) "${hour}AM" else String.format(Locale.US, "%d:%02dAM", hour, minute)
+                hour == 12 -> if (minute == 0) "12PM" else String.format(Locale.US, "12:%02dPM", minute)
+                else -> if (minute == 0) "${hour - 12}PM" else String.format(Locale.US, "%d:%02dPM", hour - 12, minute)
+            }
+        } catch (e: Exception) {
+            // Fallback to current time format
+            val calendar = Calendar.getInstance()
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            when {
                 hour == 0 -> "12AM"
-                hour < 12 -> "${hour}AM"
+                hour < 12 -> "${hour}AM"  
                 hour == 12 -> "12PM"
                 else -> "${hour - 12}PM"
             }
-        } catch (e: Exception) {
-            return "Hour"
         }
     }
 
