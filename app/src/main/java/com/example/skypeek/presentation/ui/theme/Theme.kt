@@ -69,43 +69,43 @@ fun SkyPeekTheme(
 // Additional colors for weather states
 object WeatherColors {
     val SunnyGradient = listOf(
-        Color(0xFF87CEEB), // Light blue
-        Color(0xFF4A90E2)  // Deeper blue
+        Color(0xFF5A9FD4), // Softer blue
+        Color(0xFF7BB3E0)  // Medium blue
     )
     
     val CloudyGradient = listOf(
-        Color(0xFFDDA0DD), // Plum
-        Color(0xFF9370DB), // Medium slate blue
-        Color(0xFF663399)  // Rebecca purple
+        Color(0xFF6B7A8A), // Muted gray-blue
+        Color(0xFF7D8C9C), // Slightly lighter gray-blue
+        Color(0xFF9FAAB5)  // Light gray-blue
     )
     
     val RainyGradient = listOf(
-        Color(0xFF4A4A4A), // Dark gray
-        Color(0xFF2F2F2F), // Darker gray
-        Color(0xFF1A1A1A)  // Almost black
+        Color(0xFF3A4A5C), // Dark muted blue-gray
+        Color(0xFF4A5A6C), // Medium dark gray-blue
+        Color(0xFF5A6A7C)  // Medium gray-blue
     )
     
     val SnowGradient = listOf(
-        Color(0xFFB0C4DE), // Light steel blue
-        Color(0xFF778899), // Light slate gray
-        Color(0xFF556B8D)  // Dark slate blue
+        Color(0xFF9BB0C4), // Soft blue-gray
+        Color(0xFFB1C6DA), // Light blue-gray
+        Color(0xFFC7DCF0)  // Very light blue
     )
     
     val StormyGradient = listOf(
-        Color(0xFF2F2F2F), // Very dark gray
-        Color(0xFF1A1A1A), // Almost black
-        Color(0xFF000000)  // Black
+        Color(0xFF2A2A2F), // Dark but not black
+        Color(0xFF3A3A40), // Medium dark gray
+        Color(0xFF4A4A50)  // Lighter dark gray
     )
     
     val FoggyGradient = listOf(
-        Color(0xFF696969), // Dim gray
-        Color(0xFF484848), // Dark gray
-        Color(0xFF2F2F2F)  // Very dark gray
+        Color(0xFF5A6670), // Muted gray
+        Color(0xFF6A7680), // Light muted gray
+        Color(0xFF8A96A0)  // Lighter gray
     )
     
-    // Text colors for weather overlays
-    val WeatherTextPrimary = Color.White
-    val WeatherTextSecondary = Color.White.copy(alpha = 0.9f)
-    val WeatherTextTertiary = Color.White.copy(alpha = 0.8f)
-    val WeatherTextQuaternary = Color.White.copy(alpha = 0.6f)
+    // Text colors for weather overlays - slightly more transparent for elegance
+    val WeatherTextPrimary = Color.White.copy(alpha = 0.95f)
+    val WeatherTextSecondary = Color.White.copy(alpha = 0.85f)
+    val WeatherTextTertiary = Color.White.copy(alpha = 0.75f)
+    val WeatherTextQuaternary = Color.White.copy(alpha = 0.55f)
 } 

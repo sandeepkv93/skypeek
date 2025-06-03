@@ -140,46 +140,46 @@ private fun SunAnimation(modifier: Modifier = Modifier) {
     
     // Very subtle glow animation - more like iOS
     val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.05f,
-        targetValue = 0.15f,
+        initialValue = 0.02f,
+        targetValue = 0.08f,
         animationSpec = infiniteRepeatable(
-            animation = tween(6000, easing = EaseInOut),
+            animation = tween(8000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glow_alpha"
     )
     
     val glowRadius by infiniteTransition.animateFloat(
-        initialValue = 80f,
-        targetValue = 120f,
+        initialValue = 60f,
+        targetValue = 90f,
         animationSpec = infiniteRepeatable(
-            animation = tween(8000, easing = EaseInOut),
+            animation = tween(10000, easing = EaseInOut),
             repeatMode = RepeatMode.Reverse
         ),
         label = "glow_radius"
     )
     
     Canvas(modifier = modifier) {
-        val center = Offset(size.width * 0.75f, size.height * 0.15f)
+        val center = Offset(size.width * 0.8f, size.height * 0.12f)
         
-        // Outer glow - very subtle
+        // Outer glow - extremely subtle
         drawCircle(
-            color = Color.White.copy(alpha = glowAlpha * 0.3f),
-            radius = glowRadius * 1.5f,
+            color = Color.White.copy(alpha = glowAlpha * 0.2f),
+            radius = glowRadius * 1.3f,
             center = center
         )
         
-        // Middle glow
+        // Middle glow - very subtle
         drawCircle(
-            color = Color.White.copy(alpha = glowAlpha * 0.5f),
-            radius = glowRadius,
+            color = Color.White.copy(alpha = glowAlpha * 0.4f),
+            radius = glowRadius * 0.8f,
             center = center
         )
         
         // Inner subtle glow
         drawCircle(
-            color = Color.White.copy(alpha = glowAlpha),
-            radius = glowRadius * 0.6f,
+            color = Color.White.copy(alpha = glowAlpha * 0.6f),
+            radius = glowRadius * 0.5f,
             center = center
         )
     }
@@ -203,40 +203,40 @@ private class RaindropState(
 private fun getWeatherGradient(weatherType: WeatherType): List<ULong> {
     return when (weatherType) {
         WeatherType.SUNNY -> listOf(
-            Color(0xFF4A90E2).value,  // Bright blue at top
-            Color(0xFF87CEEB).value,  // Sky blue
-            Color(0xFF98D8E8).value,  // Light blue
-            Color(0xFFFFF8F0).value   // Very light cream at bottom
+            Color(0xFF5A9FD4).value,  // Softer blue at top
+            Color(0xFF7BB3E0).value,  // Medium blue
+            Color(0xFF9BC7EC).value,  // Light blue
+            Color(0xFFB8D4F1).value   // Very light blue at bottom
         )
         WeatherType.CLOUDY -> listOf(
-            Color(0xFF8E9AAF).value,    // Cool gray-blue
-            Color(0xFFA8B4C7).value,    // Light gray-blue  
-            Color(0xFFCBD2E1).value,    // Very light gray-blue
-            Color(0xFFF1F3F6).value     // Off-white
+            Color(0xFF6B7A8A).value,    // Muted gray-blue
+            Color(0xFF7D8C9C).value,    // Slightly lighter gray-blue  
+            Color(0xFF9FAAB5).value,    // Light gray-blue
+            Color(0xFFC1CCD7).value     // Very light gray-blue
         )
         WeatherType.RAINY -> listOf(
-            Color(0xFF2F4858).value,    // Dark blue-gray
-            Color(0xFF4A6741).value,    // Deeper gray-blue
-            Color(0xFF5D7A89).value,    // Medium gray-blue
-            Color(0xFF8FA7B7).value     // Light gray-blue
+            Color(0xFF3A4A5C).value,    // Dark muted blue-gray
+            Color(0xFF4A5A6C).value,    // Medium dark gray-blue
+            Color(0xFF5A6A7C).value,    // Medium gray-blue
+            Color(0xFF7A8A9C).value     // Lighter gray-blue
         )
         WeatherType.SNOW -> listOf(
-            Color(0xFFB8C6DB).value,    // Light blue-gray
-            Color(0xFFD1DCE8).value,    // Very light blue-gray
-            Color(0xFFE8EDF4).value,    // Almost white blue
-            Color(0xFFFAFBFC).value     // Pure white
+            Color(0xFF9BB0C4).value,    // Soft blue-gray
+            Color(0xFFB1C6DA).value,    // Light blue-gray
+            Color(0xFFC7DCF0).value,    // Very light blue
+            Color(0xFFE3F2FF).value     // Almost white blue
         )
         WeatherType.STORMY -> listOf(
-            Color(0xFF1C1C1C).value,    // Very dark
-            Color(0xFF2F2F35).value,    // Dark gray
-            Color(0xFF4A4A50).value,    // Medium dark gray
-            Color(0xFF6A6A70).value     // Lighter dark gray
+            Color(0xFF2A2A2F).value,    // Dark but not black
+            Color(0xFF3A3A40).value,    // Medium dark gray
+            Color(0xFF4A4A50).value,    // Lighter dark gray
+            Color(0xFF5A5A60).value     // Medium gray
         )
         WeatherType.FOGGY -> listOf(
-            Color(0xFF6B7280).value,    // Gray
-            Color(0xFF8B92A5).value,    // Light gray
-            Color(0xFFB1B8CA).value,    // Lighter gray
-            Color(0xFFD5D9E4).value     // Very light gray
+            Color(0xFF5A6670).value,    // Muted gray
+            Color(0xFF6A7680).value,    // Light muted gray
+            Color(0xFF8A96A0).value,    // Lighter gray
+            Color(0xFFAAB6C0).value     // Very light gray
         )
     }
 } 
