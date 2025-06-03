@@ -32,6 +32,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import com.example.skypeek.presentation.ui.components.SettingsBottomSheet
+import com.example.skypeek.presentation.ui.components.LocationSearchScreen
+import com.example.skypeek.presentation.ui.components.ManageLocationsScreen
+import com.example.skypeek.presentation.ui.components.SettingsScreen
+import com.example.skypeek.presentation.ui.components.AboutDialog
+import com.example.skypeek.domain.model.LocationData
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -88,8 +93,15 @@ fun WeatherApp(
 ) {
     val screenState by viewModel.screenState.collectAsStateWithLifecycle()
     val showMenu by viewModel.showMenu.collectAsStateWithLifecycle()
+    val savedLocations by viewModel.savedLocations.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    
+    // Navigation state
+    var currentScreen by remember { mutableStateOf("weather") }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var searchResults by remember { mutableStateOf<List<LocationData>>(emptyList()) }
+    var isSearching by remember { mutableStateOf(false) }
     
     // Location permission handling
     val locationPermissionState = rememberPermissionState(
@@ -132,75 +144,128 @@ fun WeatherApp(
         }
     }
     
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (screenState.weatherStates.isEmpty()) {
-            // Loading initial state
-            LoadingScreen()
-        } else {
-            // Weather pager
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                when (val weatherState = screenState.weatherStates.getOrNull(page)) {
-                    is WeatherUiState.Loading -> LoadingScreen()
-                    is WeatherUiState.Success -> {
-                        WeatherScreen(
-                            weatherData = weatherState.weather,
-                            onRefresh = { viewModel.refreshWeatherAtIndex(page) },
-                            onMapClick = { /* Handle map click */ },
-                            onMenuClick = { viewModel.toggleMenu() }
-                        )
+    when (currentScreen) {
+        "weather" -> {
+            // Existing weather screen code
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (screenState.weatherStates.isEmpty()) {
+                    // Loading initial state
+                    LoadingScreen()
+                } else {
+                    // Weather pager
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (val weatherState = screenState.weatherStates.getOrNull(page)) {
+                            is WeatherUiState.Loading -> LoadingScreen()
+                            is WeatherUiState.Success -> {
+                                WeatherScreen(
+                                    weatherData = weatherState.weather,
+                                    onRefresh = { viewModel.refreshWeatherAtIndex(page) },
+                                    onMapClick = { /* Handle map click */ },
+                                    onMenuClick = { viewModel.toggleMenu() }
+                                )
+                            }
+                            is WeatherUiState.Error -> {
+                                ErrorScreen(
+                                    message = weatherState.message,
+                                    onRetry = { viewModel.refreshWeatherAtIndex(page) }
+                                )
+                            }
+                            null -> LoadingScreen()
+                        }
                     }
-                    is WeatherUiState.Error -> {
-                        ErrorScreen(
-                            message = weatherState.message,
-                            onRetry = { viewModel.refreshWeatherAtIndex(page) }
-                        )
-                    }
-                    null -> LoadingScreen()
+                }
+                
+                // Location permission dialog
+                if (screenState.showLocationDialog) {
+                    LocationPermissionDialog(
+                        onGrantPermission = {
+                            viewModel.setShowLocationDialog(false)
+                            locationPermissionState.launchPermissionRequest()
+                        },
+                        onDismiss = {
+                            viewModel.setShowLocationDialog(false)
+                        }
+                    )
+                }
+                
+                // Pull to refresh overlay
+                if (screenState.isRefreshing) {
+                    RefreshIndicator(
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+                }
+                
+                // Settings bottom sheet
+                if (showMenu) {
+                    SettingsBottomSheet(
+                        onDismiss = { viewModel.hideMenu() },
+                        onAddLocation = {
+                            currentScreen = "add_location"
+                            viewModel.hideMenu()
+                        },
+                        onManageLocations = {
+                            currentScreen = "manage_locations"
+                            viewModel.hideMenu()
+                        },
+                        onSettings = {
+                            currentScreen = "settings"
+                            viewModel.hideMenu()
+                        },
+                        onAbout = {
+                            showAboutDialog = true
+                            viewModel.hideMenu()
+                        }
+                    )
                 }
             }
         }
         
-        // Location permission dialog
-        if (screenState.showLocationDialog) {
-            LocationPermissionDialog(
-                onGrantPermission = {
-                    viewModel.setShowLocationDialog(false)
-                    locationPermissionState.launchPermissionRequest()
+        "add_location" -> {
+            LocationSearchScreen(
+                onLocationSelected = { location ->
+                    viewModel.addLocation(location)
+                    currentScreen = "weather"
                 },
-                onDismiss = {
-                    viewModel.setShowLocationDialog(false)
+                onNavigateBack = { currentScreen = "weather" },
+                onSearchLocations = { query ->
+                    isSearching = true
+                    // TODO: Implement actual search
+                    coroutineScope.launch {
+                        kotlinx.coroutines.delay(1000) // Simulate search
+                        searchResults = emptyList() // Placeholder
+                        isSearching = false
+                    }
+                },
+                searchResults = searchResults,
+                isSearching = isSearching
+            )
+        }
+        
+        "manage_locations" -> {
+            ManageLocationsScreen(
+                locations = savedLocations,
+                onNavigateBack = { currentScreen = "weather" },
+                onRemoveLocation = { index ->
+                    viewModel.removeLocationAtIndex(index)
                 }
             )
         }
         
-        // Pull to refresh overlay
-        if (screenState.isRefreshing) {
-            RefreshIndicator(
-                modifier = Modifier.align(Alignment.TopCenter)
+        "settings" -> {
+            SettingsScreen(
+                onNavigateBack = { currentScreen = "weather" }
             )
         }
-        
-        // Settings bottom sheet
-        if (showMenu) {
-            SettingsBottomSheet(
-                onDismiss = { viewModel.hideMenu() },
-                onAddLocation = {
-                    // TODO: Implement add location functionality
-                },
-                onManageLocations = {
-                    // TODO: Implement manage locations functionality  
-                },
-                onSettings = {
-                    // TODO: Implement settings screen
-                },
-                onAbout = {
-                    // TODO: Implement about dialog
-                }
-            )
-        }
+    }
+    
+    // About dialog
+    if (showAboutDialog) {
+        AboutDialog(
+            onDismiss = { showAboutDialog = false }
+        )
     }
 }
 
