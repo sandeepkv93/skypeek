@@ -58,49 +58,77 @@ class WeatherRepositoryImpl @Inject constructor(
         return try {
             // Check cache first unless forcing refresh
             if (!forceRefresh) {
-                val cachedData = weatherDao.getWeatherByLocation(latitude, longitude)
-                if (cachedData != null && !isDataStale(cachedData.lastUpdated)) {
-                    return Result.success(mapEntityToWeatherData(cachedData))
+                try {
+                    val cachedData = weatherDao.getWeatherByLocation(latitude, longitude)
+                    if (cachedData != null && !isDataStale(cachedData.lastUpdated)) {
+                        return Result.success(mapEntityToWeatherData(cachedData))
+                    }
+                } catch (e: Exception) {
+                    // Cache read failed, probably due to schema mismatch - clear it
+                    println("🔥 Cache read failed, clearing database: ${e.message}")
+                    try {
+                        weatherDao.clearAllWeatherData()
+                    } catch (clearException: Exception) {
+                        println("🔥 Failed to clear database: ${clearException.message}")
+                    }
                 }
             }
 
             // Try Open-Meteo first (free, no API key required)
+            println("🌐 Trying Open-Meteo API...")
             val openMeteoResult = tryOpenMeteo(latitude, longitude)
             if (openMeteoResult.isSuccess) {
                 val weatherData = openMeteoResult.getOrThrow()
                 cacheWeatherData(weatherData)
                 return Result.success(weatherData)
+            } else {
+                println("❌ Open-Meteo failed: ${openMeteoResult.exceptionOrNull()?.message}")
             }
 
             // Fallback to WeatherAPI.com
+            println("🌐 Trying WeatherAPI.com...")
             val weatherApiResult = tryWeatherApi(latitude, longitude)
             if (weatherApiResult.isSuccess) {
                 val weatherData = weatherApiResult.getOrThrow()
                 cacheWeatherData(weatherData)
                 return Result.success(weatherData)
+            } else {
+                println("❌ WeatherAPI failed: ${weatherApiResult.exceptionOrNull()?.message}")
             }
 
             // Final fallback to OpenWeatherMap
+            println("🌐 Trying OpenWeatherMap...")
             val openWeatherResult = tryOpenWeatherMap(latitude, longitude)
             if (openWeatherResult.isSuccess) {
                 val weatherData = openWeatherResult.getOrThrow()
                 cacheWeatherData(weatherData)
                 return Result.success(weatherData)
+            } else {
+                println("❌ OpenWeatherMap failed: ${openWeatherResult.exceptionOrNull()?.message}")
             }
 
             // If all APIs fail, try to return cached data
-            val cachedData = weatherDao.getWeatherByLocation(latitude, longitude)
-            if (cachedData != null) {
-                return Result.success(mapEntityToWeatherData(cachedData))
+            try {
+                val cachedData = weatherDao.getWeatherByLocation(latitude, longitude)
+                if (cachedData != null) {
+                    return Result.success(mapEntityToWeatherData(cachedData))
+                }
+            } catch (e: Exception) {
+                println("🔥 Final cache read failed: ${e.message}")
             }
 
             Result.failure(Exception("Unable to fetch weather data from any source"))
 
         } catch (e: Exception) {
+            println("🔥 General error in getWeatherData: ${e.message}")
             // Return cached data if available
-            val cachedData = weatherDao.getWeatherByLocation(latitude, longitude)
-            if (cachedData != null) {
-                return Result.success(mapEntityToWeatherData(cachedData))
+            try {
+                val cachedData = weatherDao.getWeatherByLocation(latitude, longitude)
+                if (cachedData != null) {
+                    return Result.success(mapEntityToWeatherData(cachedData))
+                }
+            } catch (cacheException: Exception) {
+                println("🔥 Cache exception: ${cacheException.message}")
             }
             Result.failure(e)
         }
@@ -275,7 +303,9 @@ class WeatherRepositoryImpl @Inject constructor(
                     current.wind_kph
                 ),
                 visibility = current.vis_km,
-                uvIndex = current.uv.toInt()
+                uvIndex = current.uv.toInt(),
+                sunrise = null,
+                sunset = null
             ),
             hourlyForecast = mapWeatherApiHourlyForecast(response.forecast.forecastday),
             dailyForecast = mapWeatherApiDailyForecast(response.forecast.forecastday),
@@ -357,7 +387,9 @@ class WeatherRepositoryImpl @Inject constructor(
                     current.wind.speed * 3.6
                 ),
                 visibility = current.visibility?.div(1000.0),
-                pressure = current.main.pressure.toDouble()
+                pressure = current.main.pressure.toDouble(),
+                sunrise = null,
+                sunset = null
             ),
             hourlyForecast = mapOpenWeatherMapHourlyForecast(forecast.list),
             dailyForecast = mapOpenWeatherMapDailyForecast(forecast.list),
@@ -416,8 +448,14 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private suspend fun cacheWeatherData(weatherData: WeatherData) {
-        val entity = mapWeatherDataToEntity(weatherData)
-        weatherDao.insertWeather(entity)
+        try {
+            val entity = mapWeatherDataToEntity(weatherData)
+            weatherDao.insertWeather(entity)
+            println("✅ Successfully cached weather data")
+        } catch (e: Exception) {
+            println("⚠️ Failed to cache weather data: ${e.message}")
+            // Don't fail the entire operation if cache write fails
+        }
     }
 
     private fun mapWeatherDataToEntity(weatherData: WeatherData): WeatherEntity {

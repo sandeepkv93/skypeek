@@ -12,7 +12,7 @@ import com.google.gson.reflect.TypeToken
 
 @Database(
     entities = [WeatherEntity::class, SavedLocationEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -25,7 +25,9 @@ abstract class WeatherDatabase : RoomDatabase() {
         
         val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // Add migration logic here if needed in future versions
+                // Add sunrise and sunset columns to weather_data table
+                database.execSQL("ALTER TABLE weather_data ADD COLUMN sunrise TEXT")
+                database.execSQL("ALTER TABLE weather_data ADD COLUMN sunset TEXT")
             }
         }
     }
