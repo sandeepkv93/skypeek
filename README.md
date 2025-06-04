@@ -32,6 +32,23 @@ A modern, feature-rich Android weather application built with Jetpack Compose, o
 - Hourly forecasts with temperature trends
 - 10-day extended forecast
 
+## 📸 Screenshots
+
+### Mobile Application
+
+<div align="center">
+  <img src="screenshots/App_Screenshot_1.png" width="250" alt="Main Weather Screen"/>
+  <img src="screenshots/App_Screenshot_2.png" width="250" alt="Weather Details"/>
+  <img src="screenshots/App_Screenshot_3.png" width="250" alt="Multiple Locations"/>
+</div>
+
+### Home Screen Widgets
+
+<div align="center">
+  <img src="screenshots/Widget_Screenshot_1.png" width="400" alt="Weather Widgets Collection"/>
+  <img src="screenshots/Widget_Screenshot_2.png" width="400" alt="Widget Layouts"/>
+</div>
+
 ## 🏗️ Architecture
 
 SkyPeek follows **Clean Architecture** principles with **MVVM** pattern, ensuring maintainable, testable, and scalable code.
@@ -398,10 +415,6 @@ src/
 - Automated tests must pass
 - Follow the established architecture patterns
 - Maintain backward compatibility
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
