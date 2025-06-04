@@ -41,36 +41,7 @@ fun WeatherScreen(
                 )
             )
     ) {
-        // Top Navigation Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 50.dp), // Increased top padding for status bar
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Menu button (top left)
-            IconButton(onClick = onMenuClick) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu",
-                    tint = WeatherColors.WeatherTextPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            
-            // Map button (top right)
-            IconButton(onClick = onMapClick) {
-                Icon(
-                    imageVector = Icons.Default.LocationOn,
-                    contentDescription = "Map",
-                    tint = WeatherColors.WeatherTextPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        
-        // Main content with scrollable weather information
+        // Main content with scrollable weather information - positioned first (behind navigation)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -115,6 +86,52 @@ fun WeatherScreen(
             )
             
             Spacer(modifier = Modifier.height(40.dp)) // Bottom padding
+        }
+        
+        // Top Navigation Bar - positioned last (on top) with elevated clickable area
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 50.dp) // Increased top padding for status bar
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            WeatherColors.SunnyGradient[0].copy(alpha = 0.8f),
+                            androidx.compose.ui.graphics.Color.Transparent
+                        )
+                    )
+                ),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Menu button (top left) - increased touch target
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier
+                    .size(48.dp) // Larger touch target
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    tint = WeatherColors.WeatherTextPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            // Map button (top right) - increased touch target
+            IconButton(
+                onClick = onMapClick,
+                modifier = Modifier
+                    .size(48.dp) // Larger touch target
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Map",
+                    tint = WeatherColors.WeatherTextPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }

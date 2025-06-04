@@ -10,12 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.skypeek.presentation.ui.theme.WeatherColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,15 +27,15 @@ fun SettingsBottomSheet(
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color.White.copy(alpha = 0.95f),
-        contentColor = Color.Black,
+        containerColor = MaterialTheme.colorScheme.surface,
+        contentColor = MaterialTheme.colorScheme.onSurface,
         dragHandle = {
             Box(
                 modifier = Modifier
                     .width(40.dp)
                     .height(4.dp)
                     .background(
-                        Color.Gray.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
                         RoundedCornerShape(2.dp)
                     )
             )
@@ -54,7 +52,7 @@ fun SettingsBottomSheet(
                 text = "Weather",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(bottom = 24.dp)
             )
             
@@ -79,8 +77,8 @@ fun SettingsBottomSheet(
                 }
             )
             
-            Divider(
-                color = Color.Gray.copy(alpha = 0.2f),
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
                 modifier = Modifier.padding(vertical = 16.dp)
             )
             
@@ -128,7 +126,7 @@ private fun SettingsMenuItem(
         Icon(
             imageVector = icon,
             contentDescription = title,
-            tint = Color(0xFF007AFF), // iOS Blue
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )
         
@@ -141,13 +139,13 @@ private fun SettingsMenuItem(
                 text = title,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color.Black
+                color = MaterialTheme.colorScheme.onSurface
             )
             
             Text(
                 text = subtitle,
                 fontSize = 13.sp,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 2.dp)
             )
         }
@@ -155,7 +153,7 @@ private fun SettingsMenuItem(
         Icon(
             imageVector = Icons.Default.KeyboardArrowRight,
             contentDescription = "Go",
-            tint = Color.Gray.copy(alpha = 0.6f),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
             modifier = Modifier.size(20.dp)
         )
     }
