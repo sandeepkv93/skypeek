@@ -1,10 +1,11 @@
 package com.example.skypeek.widgets
 
-import android.app.IntentService
+import android.app.Service
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.IBinder
 import android.widget.RemoteViews
 import com.example.skypeek.R
 import com.example.skypeek.domain.model.WeatherData
@@ -12,31 +13,54 @@ import com.example.skypeek.domain.model.WeatherType
 import com.example.skypeek.domain.repository.WeatherRepository
 import com.example.skypeek.utils.WeatherCodeMapper
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class WeatherWidgetService : IntentService("WeatherWidgetService") {
+class WeatherWidgetService : Service() {
     
     @Inject
     lateinit var weatherRepository: WeatherRepository
     
-    override fun onHandleIntent(intent: Intent?) {
-        when (intent?.action) {
-            ACTION_UPDATE_WIDGETS -> updateAllWidgets()
-            ACTION_UPDATE_SINGLE_WIDGET -> {
-                val appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
-                val widgetType = intent.getStringExtra(EXTRA_WIDGET_TYPE)
-                if (appWidgetId != -1 && widgetType != null) {
-                    updateSingleWidget(appWidgetId, widgetType)
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    
+    override fun onBind(intent: Intent?): IBinder? = null
+    
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        intent?.let { handleIntent(it) }
+        return START_NOT_STICKY
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+    }
+    
+    private fun handleIntent(intent: Intent) {
+        serviceScope.launch {
+            try {
+                when (intent.action) {
+                    ACTION_UPDATE_WIDGETS -> updateAllWidgets()
+                    ACTION_UPDATE_SINGLE_WIDGET -> {
+                        val appWidgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1)
+                        val widgetType = intent.getStringExtra(EXTRA_WIDGET_TYPE)
+                        if (appWidgetId != -1 && widgetType != null) {
+                            updateSingleWidget(appWidgetId, widgetType)
+                        }
+                    }
                 }
+            } catch (e: Exception) {
+                // Log error and stop service
+                stopSelf()
+            } finally {
+                stopSelf()
             }
         }
     }
     
-    private fun updateAllWidgets() {
+    private suspend fun updateAllWidgets() {
         val appWidgetManager = AppWidgetManager.getInstance(this)
         
         // Update 4x1 widgets
@@ -72,31 +96,29 @@ class WeatherWidgetService : IntentService("WeatherWidgetService") {
         }
     }
     
-    private fun updateSingleWidget(appWidgetId: Int, widgetType: String) {
-        runBlocking {
-            try {
-                val location = getWidgetLocation(appWidgetId)
-                val weatherResult = weatherRepository.getWeatherData(
-                    location.latitude,
-                    location.longitude
-                )
-                
-                weatherResult.fold(
-                    onSuccess = { weather ->
-                        when (widgetType) {
-                            WIDGET_TYPE_4X1 -> updateWidget4x1(appWidgetId, weather)
-                            WIDGET_TYPE_4X2 -> updateWidget4x2(appWidgetId, weather)
-                            WIDGET_TYPE_5X1 -> updateWidget5x1(appWidgetId, weather)
-                            WIDGET_TYPE_5X2 -> updateWidget5x2(appWidgetId, weather)
-                        }
-                    },
-                    onFailure = { error ->
-                        showWidgetError(appWidgetId, widgetType, error.message ?: "Error loading weather")
+    private suspend fun updateSingleWidget(appWidgetId: Int, widgetType: String) {
+        try {
+            val location = getWidgetLocation(appWidgetId)
+            val weatherResult = weatherRepository.getWeatherData(
+                location.latitude,
+                location.longitude
+            )
+            
+            weatherResult.fold(
+                onSuccess = { weather ->
+                    when (widgetType) {
+                        WIDGET_TYPE_4X1 -> updateWidget4x1(appWidgetId, weather)
+                        WIDGET_TYPE_4X2 -> updateWidget4x2(appWidgetId, weather)
+                        WIDGET_TYPE_5X1 -> updateWidget5x1(appWidgetId, weather)
+                        WIDGET_TYPE_5X2 -> updateWidget5x2(appWidgetId, weather)
                     }
-                )
-            } catch (e: Exception) {
-                showWidgetError(appWidgetId, widgetType, "Failed to update widget")
-            }
+                },
+                onFailure = { error ->
+                    showWidgetError(appWidgetId, widgetType, error.message ?: "Error loading weather")
+                }
+            )
+        } catch (e: Exception) {
+            showWidgetError(appWidgetId, widgetType, "Failed to update widget: ${e.message}")
         }
     }
     
