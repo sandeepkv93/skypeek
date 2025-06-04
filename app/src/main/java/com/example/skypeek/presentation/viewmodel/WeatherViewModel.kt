@@ -251,7 +251,7 @@ class WeatherViewModel @Inject constructor(
     /**
      * Update current location with GPS coordinates
      */
-    fun updateCurrentLocation(latitude: Double, longitude: Double) {
+    fun updateCurrentLocation(context: android.content.Context, latitude: Double, longitude: Double) {
         viewModelScope.launch {
             // Use LocationRepository to get actual city name via reverse geocoding
             val locationResult = locationRepository.reverseGeocode(latitude, longitude)
@@ -279,6 +279,18 @@ class WeatherViewModel @Inject constructor(
             
             loadWeatherForLocations(currentLocations)
             _screenState.value = _screenState.value.copy(currentLocationIndex = 0)
+            
+            // Update widgets that use current location
+            try {
+                com.example.skypeek.widgets.WeatherWidgetService.updateWidgetLocation(
+                    context,
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    currentLocation.cityName
+                )
+            } catch (e: Exception) {
+                // Widget update failed, but don't crash the app
+            }
         }
     }
 

@@ -5,22 +5,21 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background_5x2"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="12dp">
 
     <!-- Top Row: Current Weather -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1.2"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_marginBottom="8dp">
 
-        <!-- Left: Location and Current Conditions -->
+        <!-- Left: Location and Condition -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.5"
+            android:layout_weight="2"
             android:orientation="vertical"
             android:gravity="start">
 
@@ -30,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:text="Current Location"
                 android:textColor="#FFFFFF"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium" />
 
@@ -40,38 +39,27 @@
                 android:layout_height="wrap_content"
                 android:text="Partly Cloudy"
                 android:textColor="#CCFFFFFF"
-                android:textSize="12sp"
+                android:textSize="11sp"
                 android:fontFamily="sans-serif"
                 android:layout_marginTop="2dp" />
-
-            <TextView
-                android:id="@+id/widget_last_updated"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Updated 5 min ago"
-                android:textColor="#99FFFFFF"
-                android:textSize="9sp"
-                android:fontFamily="sans-serif"
-                android:layout_marginTop="4dp" />
 
         </LinearLayout>
 
         <!-- Center: Weather Icon -->
         <ImageView
             android:id="@+id/widget_weather_icon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:src="@drawable/ic_partly_cloudy"
             android:scaleType="fitCenter"
-            android:layout_marginHorizontal="12dp" />
+            android:layout_marginEnd="8dp" />
 
-        <!-- Right: Temperature and Details -->
+        <!-- Right: Temperature -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:orientation="vertical"
-            android:gravity="end">
+            android:gravity="center">
 
             <TextView
                 android:id="@+id/widget_temperature"
@@ -79,9 +67,9 @@
                 android:layout_height="wrap_content"
                 android:text="22°"
                 android:textColor="#FFFFFF"
-                android:textSize="32sp"
+                android:textSize="24sp"
                 android:textStyle="normal"
-                android:fontFamily="sans-serif-ultralight" />
+                android:fontFamily="sans-serif-light" />
 
             <TextView
                 android:id="@+id/widget_high_low"
@@ -89,315 +77,312 @@
                 android:layout_height="wrap_content"
                 android:text="H:25° L:18°"
                 android:textColor="#CCFFFFFF"
-                android:textSize="11sp"
-                android:fontFamily="sans-serif-light" />
-
-            <TextView
-                android:id="@+id/widget_feels_like"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Feels like 24°"
-                android:textColor="#99FFFFFF"
                 android:textSize="9sp"
-                android:fontFamily="sans-serif"
-                android:layout_marginTop="2dp" />
+                android:fontFamily="sans-serif-light" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- Separator Line -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#33FFFFFF"
-        android:layout_marginVertical="4dp" />
-
-    <!-- Bottom Row: Hourly and Tomorrow Forecast -->
+    <!-- Additional Info Row -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
 
-        <!-- Left: 6-Hour Forecast -->
+        <TextView
+            android:id="@+id/widget_feels_like"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Feels like 24°"
+            android:textColor="#99FFFFFF"
+            android:textSize="9sp"
+            android:fontFamily="sans-serif" />
+
+        <TextView
+            android:id="@+id/widget_last_updated"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Updated 5 min ago"
+            android:textColor="#99FFFFFF"
+            android:textSize="9sp"
+            android:fontFamily="sans-serif"
+            android:gravity="end" />
+
+    </LinearLayout>
+
+    <!-- Hourly Forecast Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Hour 1 -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="3"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <!-- Hour 1 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/widget_hour1_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Now"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="9sp"
-                    android:fontFamily="sans-serif" />
-
-                <ImageView
-                    android:id="@+id/widget_hour1_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_partly_cloudy"
-                    android:scaleType="fitCenter"
-                    android:layout_marginVertical="3dp" />
-
-                <TextView
-                    android:id="@+id/widget_hour1_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="22°"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:fontFamily="sans-serif" />
-
-            </LinearLayout>
-
-            <!-- Hour 2 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/widget_hour2_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="1PM"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="9sp"
-                    android:fontFamily="sans-serif" />
-
-                <ImageView
-                    android:id="@+id/widget_hour2_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_sunny"
-                    android:scaleType="fitCenter"
-                    android:layout_marginVertical="3dp" />
-
-                <TextView
-                    android:id="@+id/widget_hour2_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="24°"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:fontFamily="sans-serif" />
-
-            </LinearLayout>
-
-            <!-- Hour 3 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/widget_hour3_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2PM"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="9sp"
-                    android:fontFamily="sans-serif" />
-
-                <ImageView
-                    android:id="@+id/widget_hour3_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_cloudy"
-                    android:scaleType="fitCenter"
-                    android:layout_marginVertical="3dp" />
-
-                <TextView
-                    android:id="@+id/widget_hour3_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="23°"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:fontFamily="sans-serif" />
-
-            </LinearLayout>
-
-            <!-- Hour 4 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/widget_hour4_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="3PM"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="9sp"
-                    android:fontFamily="sans-serif" />
-
-                <ImageView
-                    android:id="@+id/widget_hour4_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_rain"
-                    android:scaleType="fitCenter"
-                    android:layout_marginVertical="3dp" />
-
-                <TextView
-                    android:id="@+id/widget_hour4_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="21°"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:fontFamily="sans-serif" />
-
-            </LinearLayout>
-
-            <!-- Hour 5 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/widget_hour5_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="4PM"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="9sp"
-                    android:fontFamily="sans-serif" />
-
-                <ImageView
-                    android:id="@+id/widget_hour5_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_rain"
-                    android:scaleType="fitCenter"
-                    android:layout_marginVertical="3dp" />
-
-                <TextView
-                    android:id="@+id/widget_hour5_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="20°"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:fontFamily="sans-serif" />
-
-            </LinearLayout>
-
-            <!-- Hour 6 -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <TextView
-                    android:id="@+id/widget_hour6_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="5PM"
-                    android:textColor="#CCFFFFFF"
-                    android:textSize="9sp"
-                    android:fontFamily="sans-serif" />
-
-                <ImageView
-                    android:id="@+id/widget_hour6_icon"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:src="@drawable/ic_cloudy"
-                    android:scaleType="fitCenter"
-                    android:layout_marginVertical="3dp" />
-
-                <TextView
-                    android:id="@+id/widget_hour6_temp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="19°"
-                    android:textColor="#FFFFFF"
-                    android:textSize="10sp"
-                    android:fontFamily="sans-serif" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Vertical Separator -->
-        <View
-            android:layout_width="1dp"
-            android:layout_height="match_parent"
-            android:background="#33FFFFFF"
-            android:layout_marginHorizontal="12dp" />
-
-        <!-- Right: Tomorrow's Forecast -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.5"
+            android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center">
 
             <TextView
+                android:id="@+id/widget_hour1_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Tomorrow"
+                android:text="Now"
                 android:textColor="#CCFFFFFF"
-                android:textSize="10sp"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginBottom="4dp" />
+                android:textSize="9sp"
+                android:fontFamily="sans-serif" />
 
             <ImageView
-                android:id="@+id/widget_tomorrow_icon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_sunny"
+                android:id="@+id/widget_hour1_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_partly_cloudy"
                 android:scaleType="fitCenter"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginVertical="2dp" />
 
             <TextView
-                android:id="@+id/widget_tomorrow_high"
+                android:id="@+id/widget_hour1_temp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="26°"
+                android:text="22°"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:fontFamily="sans-serif-light" />
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 2 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
 
             <TextView
-                android:id="@+id/widget_tomorrow_low"
+                android:id="@+id/widget_hour2_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="9sp"
+                android:fontFamily="sans-serif" />
+
+            <ImageView
+                android:id="@+id/widget_hour2_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_sunny"
+                android:scaleType="fitCenter"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour2_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="24°"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 3 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour3_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="9sp"
+                android:fontFamily="sans-serif" />
+
+            <ImageView
+                android:id="@+id/widget_hour3_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_cloudy"
+                android:scaleType="fitCenter"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour3_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="23°"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 4 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour4_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="9sp"
+                android:fontFamily="sans-serif" />
+
+            <ImageView
+                android:id="@+id/widget_hour4_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_rain"
+                android:scaleType="fitCenter"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour4_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="21°"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 5 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour5_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="9sp"
+                android:fontFamily="sans-serif" />
+
+            <ImageView
+                android:id="@+id/widget_hour5_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_rain"
+                android:scaleType="fitCenter"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour5_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="20°"
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
+
+        </LinearLayout>
+
+        <!-- Hour 6 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/widget_hour6_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="5PM"
+                android:textColor="#CCFFFFFF"
+                android:textSize="9sp"
+                android:fontFamily="sans-serif" />
+
+            <ImageView
+                android:id="@+id/widget_hour6_icon"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_cloudy"
+                android:scaleType="fitCenter"
+                android:layout_marginVertical="2dp" />
+
+            <TextView
+                android:id="@+id/widget_hour6_temp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="19°"
-                android:textColor="#CCFFFFFF"
-                android:textSize="11sp"
-                android:fontFamily="sans-serif-light" />
+                android:textColor="#FFFFFF"
+                android:textSize="10sp"
+                android:fontFamily="sans-serif" />
 
         </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Tomorrow Forecast -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tomorrow:"
+            android:textColor="#CCFFFFFF"
+            android:textSize="10sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginEnd="8dp" />
+
+        <ImageView
+            android:id="@+id/widget_tomorrow_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_sunny"
+            android:scaleType="fitCenter"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/widget_tomorrow_high"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="26°"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-light"
+            android:layout_marginEnd="2dp" />
+
+        <TextView
+            android:id="@+id/widget_tomorrow_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="19°"
+            android:textColor="#CCFFFFFF"
+            android:textSize="11sp"
+            android:fontFamily="sans-serif-light" />
 
     </LinearLayout>
 

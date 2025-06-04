@@ -11,6 +11,7 @@ import com.example.skypeek.R
 import com.example.skypeek.domain.model.WeatherData
 import com.example.skypeek.domain.model.WeatherType
 import com.example.skypeek.domain.repository.WeatherRepository
+import com.example.skypeek.domain.repository.LocationRepository
 import com.example.skypeek.utils.WeatherCodeMapper
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
@@ -23,6 +24,9 @@ class WeatherWidgetService : Service() {
     
     @Inject
     lateinit var weatherRepository: WeatherRepository
+    
+    @Inject
+    lateinit var locationRepository: LocationRepository
     
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
@@ -49,6 +53,26 @@ class WeatherWidgetService : Service() {
                         if (appWidgetId != -1 && widgetType != null) {
                             updateSingleWidget(appWidgetId, widgetType)
                         }
+                    }
+                    ACTION_UPDATE_LOCATION -> {
+                        val latitude = intent.getDoubleExtra(EXTRA_LATITUDE, 0.0)
+                        val longitude = intent.getDoubleExtra(EXTRA_LONGITUDE, 0.0)
+                        val cityName = intent.getStringExtra(EXTRA_CITY_NAME) ?: "Current Location"
+                        
+                        if (latitude != 0.0 && longitude != 0.0) {
+                            val newLocation = com.example.skypeek.domain.model.LocationData(
+                                latitude = latitude,
+                                longitude = longitude,
+                                cityName = cityName,
+                                country = "",
+                                isCurrentLocation = true
+                            )
+                            updateAllWidgetsLocation(newLocation)
+                        }
+                    }
+                    ACTION_RESET_TO_CURRENT_LOCATION -> {
+                        resetAllWidgetsToCurrentLocation()
+                        updateAllWidgets() // Refresh widgets with new location settings
                     }
                 }
             } catch (e: Exception) {
@@ -106,11 +130,39 @@ class WeatherWidgetService : Service() {
             
             weatherResult.fold(
                 onSuccess = { weather ->
+                    // Handle "Loading..." city name by reverse geocoding
+                    val updatedWeather = if (weather.location.cityName == "Loading...") {
+                        val reverseGeocodeResult = locationRepository.reverseGeocode(
+                            weather.location.latitude, 
+                            weather.location.longitude
+                        )
+                        reverseGeocodeResult.fold(
+                            onSuccess = { geocodedLocation ->
+                                weather.copy(
+                                    location = weather.location.copy(
+                                        cityName = geocodedLocation.cityName,
+                                        country = geocodedLocation.country
+                                    )
+                                )
+                            },
+                            onFailure = {
+                                // Fallback to stored location name or default
+                                weather.copy(
+                                    location = weather.location.copy(
+                                        cityName = location.cityName.takeIf { it.isNotBlank() } ?: "San Jose"
+                                    )
+                                )
+                            }
+                        )
+                    } else {
+                        weather
+                    }
+                    
                     when (widgetType) {
-                        WIDGET_TYPE_4X1 -> updateWidget4x1(appWidgetId, weather)
-                        WIDGET_TYPE_4X2 -> updateWidget4x2(appWidgetId, weather)
-                        WIDGET_TYPE_5X1 -> updateWidget5x1(appWidgetId, weather)
-                        WIDGET_TYPE_5X2 -> updateWidget5x2(appWidgetId, weather)
+                        WIDGET_TYPE_4X1 -> updateWidget4x1(appWidgetId, updatedWeather)
+                        WIDGET_TYPE_4X2 -> updateWidget4x2(appWidgetId, updatedWeather)
+                        WIDGET_TYPE_5X1 -> updateWidget5x1(appWidgetId, updatedWeather)
+                        WIDGET_TYPE_5X2 -> updateWidget5x2(appWidgetId, updatedWeather)
                     }
                 },
                 onFailure = { error ->
@@ -178,10 +230,10 @@ class WeatherWidgetService : Service() {
     private fun updateWidget5x1(appWidgetId: Int, weather: WeatherData) {
         val views = RemoteViews(packageName, R.layout.weather_widget_5x1)
         
-        // Ensure we have a valid city name
+        // Ensure we have a valid city name - handle both blank and "Loading..." cases
         val cityName = when {
-            weather.location.cityName.isNotBlank() -> weather.location.cityName
-            weather.location.cityName.isBlank() && weather.location.country.isNotBlank() -> weather.location.country
+            weather.location.cityName.isNotBlank() && weather.location.cityName != "Loading..." -> weather.location.cityName
+            weather.location.country.isNotBlank() -> weather.location.country
             else -> "San Jose" // Fallback
         }
         
@@ -224,63 +276,74 @@ class WeatherWidgetService : Service() {
     }
     
     private fun updateWidget5x2(appWidgetId: Int, weather: WeatherData) {
-        val views = RemoteViews(packageName, R.layout.weather_widget_5x2)
-        
-        // Ensure we have a valid city name
-        val cityName = when {
-            weather.location.cityName.isNotBlank() -> weather.location.cityName
-            weather.location.cityName.isBlank() && weather.location.country.isNotBlank() -> weather.location.country
-            else -> "San Jose" // Fallback
-        }
-        
-        views.apply {
-            setTextViewText(R.id.widget_city_name, cityName)
-            setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
-            setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
-            setTextViewText(
-                R.id.widget_high_low,
-                "H:${weather.currentWeather.highTemp}° L:${weather.currentWeather.lowTemp}°"
-            )
-            setTextViewText(R.id.widget_feels_like, "Feels like ${weather.currentWeather.temperature + 2}°")
-            setTextViewText(R.id.widget_last_updated, "Updated ${getTimeAgo(System.currentTimeMillis())}")
-            setImageViewResource(R.id.widget_weather_icon, getWeatherIconResource(weather.currentWeather.weatherCode))
+        try {
+            val views = RemoteViews(packageName, R.layout.weather_widget_5x2)
             
-            // Update 6-hour forecast
-            updateWidget5x2Hourly(this, weather.hourlyForecast.take(6))
-            
-            // Update tomorrow's forecast
-            if (weather.dailyForecast.isNotEmpty()) {
-                val tomorrow = weather.dailyForecast.first()
-                setImageViewResource(R.id.widget_tomorrow_icon, getWeatherIconResource(tomorrow.weatherCode))
-                setTextViewText(R.id.widget_tomorrow_high, "${tomorrow.highTemp}°")
-                setTextViewText(R.id.widget_tomorrow_low, "${tomorrow.lowTemp}°")
+            // Ensure we have a valid city name - handle both blank and "Loading..." cases
+            val cityName = when {
+                weather.location.cityName.isNotBlank() && weather.location.cityName != "Loading..." -> weather.location.cityName
+                weather.location.country.isNotBlank() -> weather.location.country
+                else -> "San Jose" // Fallback
             }
+            
+            views.apply {
+                setTextViewText(R.id.widget_city_name, cityName)
+                setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
+                setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
+                setTextViewText(
+                    R.id.widget_high_low,
+                    "H:${weather.currentWeather.highTemp}° L:${weather.currentWeather.lowTemp}°"
+                )
+                setTextViewText(R.id.widget_feels_like, "Feels like ${weather.currentWeather.feelsLike}°")
+                setTextViewText(R.id.widget_last_updated, "Updated ${getTimeAgo(weather.lastUpdated)}")
+                setImageViewResource(R.id.widget_weather_icon, getWeatherIconResource(weather.currentWeather.weatherCode))
+                
+                // Update 6-hour forecast
+                updateWidget5x2Hourly(this, weather.hourlyForecast.take(6))
+                
+                // Update tomorrow's forecast
+                if (weather.dailyForecast.isNotEmpty()) {
+                    val tomorrow = weather.dailyForecast.first()
+                    setImageViewResource(R.id.widget_tomorrow_icon, getWeatherIconResource(tomorrow.weatherCode))
+                    setTextViewText(R.id.widget_tomorrow_high, "${tomorrow.highTemp}°")
+                    setTextViewText(R.id.widget_tomorrow_low, "${tomorrow.lowTemp}°")
+                }
+            }
+            
+            // Set up click handlers
+            setupWidget5x2ClickHandlers(views)
+            
+            val appWidgetManager = AppWidgetManager.getInstance(this)
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+        } catch (e: Exception) {
+            // Log error and show error state
+            android.util.Log.e("WeatherWidget5x2", "Error updating widget $appWidgetId", e)
+            showWidgetError(appWidgetId, WIDGET_TYPE_5X2, "Widget update failed: ${e.message}")
         }
-        
-        // Set up click handlers
-        setupWidget5x2ClickHandlers(views)
-        
-        val appWidgetManager = AppWidgetManager.getInstance(this)
-        appWidgetManager.updateAppWidget(appWidgetId, views)
     }
     
     private fun updateWidget5x2Hourly(views: RemoteViews, hourlyForecast: List<com.example.skypeek.domain.model.HourlyWeather>) {
-        val hourlyViews = listOf(
-            Triple(R.id.widget_hour1_time, R.id.widget_hour1_icon, R.id.widget_hour1_temp),
-            Triple(R.id.widget_hour2_time, R.id.widget_hour2_icon, R.id.widget_hour2_temp),
-            Triple(R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp),
-            Triple(R.id.widget_hour4_time, R.id.widget_hour4_icon, R.id.widget_hour4_temp),
-            Triple(R.id.widget_hour5_time, R.id.widget_hour5_icon, R.id.widget_hour5_temp),
-            Triple(R.id.widget_hour6_time, R.id.widget_hour6_icon, R.id.widget_hour6_temp)
-        )
-        
-        hourlyForecast.forEachIndexed { index, hour ->
-            if (index < hourlyViews.size) {
-                val (timeId, iconId, tempId) = hourlyViews[index]
-                views.setTextViewText(timeId, if (index == 0) "Now" else hour.time)
-                views.setImageViewResource(iconId, getWeatherIconResource(hour.weatherCode))
-                views.setTextViewText(tempId, "${hour.temperature}°")
+        try {
+            val hourlyViews = listOf(
+                Triple(R.id.widget_hour1_time, R.id.widget_hour1_icon, R.id.widget_hour1_temp),
+                Triple(R.id.widget_hour2_time, R.id.widget_hour2_icon, R.id.widget_hour2_temp),
+                Triple(R.id.widget_hour3_time, R.id.widget_hour3_icon, R.id.widget_hour3_temp),
+                Triple(R.id.widget_hour4_time, R.id.widget_hour4_icon, R.id.widget_hour4_temp),
+                Triple(R.id.widget_hour5_time, R.id.widget_hour5_icon, R.id.widget_hour5_temp),
+                Triple(R.id.widget_hour6_time, R.id.widget_hour6_icon, R.id.widget_hour6_temp)
+            )
+            
+            hourlyForecast.forEachIndexed { index, hour ->
+                if (index < hourlyViews.size) {
+                    val (timeId, iconId, tempId) = hourlyViews[index]
+                    views.setTextViewText(timeId, hour.time)
+                    views.setImageViewResource(iconId, getWeatherIconResource(hour.weatherCode))
+                    views.setTextViewText(tempId, "${hour.temperature}°")
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("WeatherWidget5x2", "Error updating hourly forecast", e)
+            // Continue without crashing the widget
         }
     }
     
@@ -318,20 +381,90 @@ class WeatherWidgetService : Service() {
         }
     }
     
-    private fun getWidgetLocation(appWidgetId: Int): com.example.skypeek.domain.model.LocationData {
-        // Get location from widget configuration or use default
+    private suspend fun getWidgetLocation(appWidgetId: Int): com.example.skypeek.domain.model.LocationData {
         val prefs = getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
-        val latitude = prefs.getFloat("lat_$appWidgetId", 37.3382f).toDouble()
-        val longitude = prefs.getFloat("lon_$appWidgetId", -121.8863f).toDouble()
-        val cityName = prefs.getString("city_$appWidgetId", "San Jose") ?: "San Jose"
         
-        return com.example.skypeek.domain.model.LocationData(
-            latitude = latitude,
-            longitude = longitude,
-            cityName = cityName,
-            country = "",
-            isCurrentLocation = false
-        )
+        // Check if this widget is set to use current location
+        val isCurrentLocation = prefs.getBoolean("is_current_$appWidgetId", true) // Default to true for new widgets
+        
+        if (isCurrentLocation) {
+            // Always try to get current location for widgets marked as "current location"
+            try {
+                val currentLocationResult = locationRepository.getCurrentLocation()
+                currentLocationResult.fold(
+                    onSuccess = { currentLocation ->
+                        // Save/update current location for this widget
+                        prefs.edit().apply {
+                            putFloat("lat_$appWidgetId", currentLocation.latitude.toFloat())
+                            putFloat("lon_$appWidgetId", currentLocation.longitude.toFloat())
+                            putString("city_$appWidgetId", currentLocation.cityName)
+                            putBoolean("is_current_$appWidgetId", true)
+                            apply()
+                        }
+                        return currentLocation.copy(isCurrentLocation = true)
+                    },
+                    onFailure = {
+                        // Failed to get current location, use saved coordinates if available
+                        val savedLatitude = prefs.getFloat("lat_$appWidgetId", Float.NaN)
+                        val savedLongitude = prefs.getFloat("lon_$appWidgetId", Float.NaN)
+                        
+                        if (!savedLatitude.isNaN() && !savedLongitude.isNaN()) {
+                            val cityName = prefs.getString("city_$appWidgetId", "Current Location") ?: "Current Location"
+                            return com.example.skypeek.domain.model.LocationData(
+                                latitude = savedLatitude.toDouble(),
+                                longitude = savedLongitude.toDouble(),
+                                cityName = cityName,
+                                country = "",
+                                isCurrentLocation = true
+                            )
+                        } else {
+                            // No saved coordinates either, fall back to default
+                            val defaultLocation = com.example.skypeek.domain.model.LocationData(
+                                latitude = 37.3382,
+                                longitude = -121.8863,
+                                cityName = "San Jose",
+                                country = "US",
+                                isCurrentLocation = false
+                            )
+                            prefs.edit().apply {
+                                putFloat("lat_$appWidgetId", defaultLocation.latitude.toFloat())
+                                putFloat("lon_$appWidgetId", defaultLocation.longitude.toFloat())
+                                putString("city_$appWidgetId", defaultLocation.cityName)
+                                putBoolean("is_current_$appWidgetId", false)
+                                apply()
+                            }
+                            return defaultLocation
+                        }
+                    }
+                )
+            } catch (e: Exception) {
+                // Error getting current location, use saved or default
+                val savedLatitude = prefs.getFloat("lat_$appWidgetId", 37.3382f)
+                val savedLongitude = prefs.getFloat("lon_$appWidgetId", -121.8863f)
+                val cityName = prefs.getString("city_$appWidgetId", "San Jose") ?: "San Jose"
+                
+                return com.example.skypeek.domain.model.LocationData(
+                    latitude = savedLatitude.toDouble(),
+                    longitude = savedLongitude.toDouble(),
+                    cityName = cityName,
+                    country = "",
+                    isCurrentLocation = false
+                )
+            }
+        } else {
+            // Widget is set to use a specific saved location
+            val savedLatitude = prefs.getFloat("lat_$appWidgetId", 37.3382f)
+            val savedLongitude = prefs.getFloat("lon_$appWidgetId", -121.8863f)
+            val cityName = prefs.getString("city_$appWidgetId", "San Jose") ?: "San Jose"
+            
+            return com.example.skypeek.domain.model.LocationData(
+                latitude = savedLatitude.toDouble(),
+                longitude = savedLongitude.toDouble(),
+                cityName = cityName,
+                country = "",
+                isCurrentLocation = false
+            )
+        }
     }
     
     private fun showWidgetError(appWidgetId: Int, widgetType: String, message: String) {
@@ -441,13 +574,128 @@ class WeatherWidgetService : Service() {
         }
     }
     
+    private suspend fun updateAllWidgetsLocation(newLocation: com.example.skypeek.domain.model.LocationData) {
+        val prefs = getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        
+        // Update all widget types that are using current location
+        val allWidgetProviders = listOf(
+            WeatherWidget4x1Provider::class.java,
+            WeatherWidget4x2Provider::class.java,
+            WeatherWidget5x1Provider::class.java,
+            WeatherWidget5x2Provider::class.java
+        )
+        
+        allWidgetProviders.forEach { providerClass ->
+            val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(this, providerClass))
+            
+            widgetIds.forEach { widgetId ->
+                val isCurrentLocation = prefs.getBoolean("is_current_$widgetId", false)
+                
+                if (isCurrentLocation) {
+                    // Update this widget to use the new current location
+                    editor.apply {
+                        putFloat("lat_$widgetId", newLocation.latitude.toFloat())
+                        putFloat("lon_$widgetId", newLocation.longitude.toFloat())
+                        putString("city_$widgetId", newLocation.cityName)
+                    }
+                    
+                    // Determine widget type and update
+                    val widgetType = when (providerClass.simpleName) {
+                        "WeatherWidget4x1Provider" -> WIDGET_TYPE_4X1
+                        "WeatherWidget4x2Provider" -> WIDGET_TYPE_4X2
+                        "WeatherWidget5x1Provider" -> WIDGET_TYPE_5X1
+                        "WeatherWidget5x2Provider" -> WIDGET_TYPE_5X2
+                        else -> null
+                    }
+                    
+                    if (widgetType != null) {
+                        updateSingleWidget(widgetId, widgetType)
+                    }
+                }
+            }
+        }
+        
+        editor.apply()
+    }
+    
+    /**
+     * Reset all widgets to use current location
+     */
+    private fun resetAllWidgetsToCurrentLocation() {
+        val prefs = getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+        
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        val allWidgetProviders = listOf(
+            WeatherWidget4x1Provider::class.java,
+            WeatherWidget4x2Provider::class.java,
+            WeatherWidget5x1Provider::class.java,
+            WeatherWidget5x2Provider::class.java
+        )
+        
+        allWidgetProviders.forEach { providerClass ->
+            val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(this, providerClass))
+            widgetIds.forEach { widgetId ->
+                // Mark widget to use current location
+                editor.putBoolean("is_current_$widgetId", true)
+                // Clear saved coordinates so it will fetch fresh
+                editor.remove("lat_$widgetId")
+                editor.remove("lon_$widgetId")
+                editor.remove("city_$widgetId")
+            }
+        }
+        
+        editor.apply()
+    }
+    
     companion object {
         const val ACTION_UPDATE_WIDGETS = "com.example.skypeek.UPDATE_WIDGETS"
         const val ACTION_UPDATE_SINGLE_WIDGET = "com.example.skypeek.UPDATE_SINGLE_WIDGET"
+        const val ACTION_UPDATE_LOCATION = "com.example.skypeek.UPDATE_LOCATION"
+        const val ACTION_RESET_TO_CURRENT_LOCATION = "com.example.skypeek.RESET_TO_CURRENT_LOCATION"
         const val EXTRA_WIDGET_TYPE = "widget_type"
+        const val EXTRA_LATITUDE = "latitude"
+        const val EXTRA_LONGITUDE = "longitude"
+        const val EXTRA_CITY_NAME = "city_name"
         const val WIDGET_TYPE_4X1 = "4x1"
         const val WIDGET_TYPE_4X2 = "4x2"
         const val WIDGET_TYPE_5X1 = "5x1"
         const val WIDGET_TYPE_5X2 = "5x2"
+        
+        /**
+         * Update all widgets with fresh data
+         */
+        fun updateAllWidgets(context: Context) {
+            val intent = Intent(context, WeatherWidgetService::class.java).apply {
+                action = ACTION_UPDATE_WIDGETS
+            }
+            context.startService(intent)
+        }
+        
+        /**
+         * Update all widgets that use current location when the location changes
+         */
+        fun updateWidgetLocation(context: Context, latitude: Double, longitude: Double, cityName: String) {
+            val intent = Intent(context, WeatherWidgetService::class.java).apply {
+                action = ACTION_UPDATE_LOCATION
+                putExtra(EXTRA_LATITUDE, latitude)
+                putExtra(EXTRA_LONGITUDE, longitude)
+                putExtra(EXTRA_CITY_NAME, cityName)
+            }
+            context.startService(intent)
+        }
+        
+        /**
+         * Reset all widgets to use current location instead of saved coordinates
+         */
+        fun resetWidgetsToCurrentLocation(context: Context) {
+            val intent = Intent(context, WeatherWidgetService::class.java).apply {
+                action = ACTION_RESET_TO_CURRENT_LOCATION
+            }
+            context.startService(intent)
+        }
     }
 } 

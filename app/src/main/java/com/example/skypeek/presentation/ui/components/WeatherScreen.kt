@@ -33,25 +33,52 @@ fun WeatherScreen(
     val scrollState = rememberScrollState()
     
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    colors = WeatherColors.SunnyGradient
+                )
+            )
     ) {
-        // Dynamic weather background
-        WeatherBackground(
-            weatherType = weatherData.currentWeather.backgroundType,
-            modifier = Modifier.fillMaxSize()
-        )
+        // Top Navigation Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 50.dp), // Increased top padding for status bar
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Menu button (top left)
+            IconButton(onClick = onMenuClick) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu",
+                    tint = WeatherColors.WeatherTextPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            // Map button (top right)
+            IconButton(onClick = onMapClick) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Map",
+                    tint = WeatherColors.WeatherTextPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
         
-        // Main content
+        // Main content with scrollable weather information
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(horizontal = 25.dp),
+                .padding(horizontal = 25.dp)
+                .padding(top = 120.dp), // Account for top navigation
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp)) // Status bar space
-            
-            // Location Header
             LocationHeader(
                 cityName = weatherData.location.cityName,
                 isCurrentLocation = weatherData.location.isCurrentLocation
@@ -59,7 +86,6 @@ fun WeatherScreen(
             
             Spacer(modifier = Modifier.height(20.dp))
             
-            // Main Temperature Display
             MainTemperatureDisplay(
                 temperature = weatherData.currentWeather.temperature,
                 condition = weatherData.currentWeather.condition,
@@ -70,34 +96,26 @@ fun WeatherScreen(
             
             Spacer(modifier = Modifier.height(30.dp))
             
-            // Weather Description
-            WeatherDescription(
-                description = weatherData.currentWeather.description
+            WeatherDetailsRow(
+                feelsLike = weatherData.currentWeather.feelsLike.toFloat(),
+                humidity = weatherData.currentWeather.humidity,
+                windSpeed = weatherData.currentWeather.windSpeed.toFloat()
             )
             
             Spacer(modifier = Modifier.height(40.dp))
             
-            // Hourly Forecast
             HourlyForecastSection(
-                hourlyForecast = weatherData.hourlyForecast
+                hourlyForecast = weatherData.hourlyForecast.take(24)
             )
             
             Spacer(modifier = Modifier.height(40.dp))
             
-            // 10-Day Forecast
             TenDayForecastSection(
                 dailyForecast = weatherData.dailyForecast
             )
             
-            Spacer(modifier = Modifier.height(120.dp)) // Bottom navigation space
+            Spacer(modifier = Modifier.height(40.dp)) // Bottom padding
         }
-        
-        // Bottom Navigation
-        WeatherBottomNavigation(
-            onMapClick = onMapClick,
-            onMenuClick = onMenuClick,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
@@ -174,16 +192,54 @@ private fun MainTemperatureDisplay(
 }
 
 @Composable
-private fun WeatherDescription(
-    description: String
+private fun WeatherDetailsRow(
+    feelsLike: Float,
+    humidity: Int,
+    windSpeed: Float
 ) {
-    Text(
-        text = description,
-        style = WeatherTextStyles.WeatherDescription,
-        color = WeatherColors.WeatherTextSecondary,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.padding(horizontal = 20.dp)
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        WeatherDetailItem(
+            title = "FEELS LIKE",
+            value = "${feelsLike.toInt()}°"
+        )
+        
+        WeatherDetailItem(
+            title = "HUMIDITY",
+            value = "${humidity}%"
+        )
+        
+        WeatherDetailItem(
+            title = "WIND",
+            value = "${windSpeed.toInt()} km/h"
+        )
+    }
+}
+
+@Composable
+private fun WeatherDetailItem(
+    title: String,
+    value: String
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = title,
+            style = WeatherTextStyles.SectionHeader,
+            color = WeatherColors.WeatherTextTertiary
+        )
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Text(
+            text = value,
+            style = WeatherTextStyles.WeatherCondition,
+            color = WeatherColors.WeatherTextPrimary
+        )
+    }
 }
 
 @Composable
@@ -382,67 +438,5 @@ private fun TemperatureRangeBar(
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp)
                 )
         )
-    }
-}
-
-@Composable
-private fun WeatherBottomNavigation(
-    onMapClick: () -> Unit,
-    onMenuClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 30.dp, vertical = 30.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Map button
-        IconButton(onClick = onMapClick) {
-            Icon(
-                imageVector = Icons.Default.LocationOn,
-                contentDescription = "Map",
-                tint = WeatherColors.WeatherTextTertiary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        
-        // Location dots (placeholder - will be handled by pager)
-        LocationDots(currentIndex = 0, total = 1)
-        
-        // Menu button
-        IconButton(onClick = onMenuClick) {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Menu",
-                tint = WeatherColors.WeatherTextTertiary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun LocationDots(
-    currentIndex: Int,
-    total: Int
-) {
-    if (total > 1) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            repeat(total) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = if (index == currentIndex)
-                                WeatherColors.WeatherTextPrimary
-                            else
-                                WeatherColors.WeatherTextQuaternary,
-                            shape = androidx.compose.foundation.shape.CircleShape
-                        )
-                )
-            }
-        }
     }
 } 

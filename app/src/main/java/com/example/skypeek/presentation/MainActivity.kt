@@ -50,17 +50,29 @@ class MainActivity : ComponentActivity() {
         // Initialize location client
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         
+        // Reset widgets to use current location and trigger refresh when app starts
+        try {
+            com.example.skypeek.widgets.WeatherWidgetService.resetWidgetsToCurrentLocation(this)
+        } catch (e: Exception) {
+            // Widget reset failed, but don't crash the app - try regular update
+            try {
+                com.example.skypeek.widgets.WeatherWidgetService.updateAllWidgets(this)
+            } catch (e2: Exception) {
+                // Widget update also failed, but don't crash the app
+            }
+        }
+        
         setContent {
             SkyPeekTheme {
                 WeatherApp(
                     viewModel = weatherViewModel,
-                    onLocationRequest = { requestCurrentLocation() }
+                    onLocationRequest = { getCurrentLocation() }
                 )
             }
         }
     }
     
-    private fun requestCurrentLocation() {
+    private fun getCurrentLocation() {
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -79,7 +91,7 @@ class MainActivity : ComponentActivity() {
             null
         ).addOnSuccessListener { location: Location? ->
             location?.let {
-                weatherViewModel.updateCurrentLocation(it.latitude, it.longitude)
+                weatherViewModel.updateCurrentLocation(this@MainActivity, it.latitude, it.longitude)
             }
         }
     }
