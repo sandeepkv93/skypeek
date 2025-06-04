@@ -36,7 +36,9 @@ data class CurrentWeather(
     val description: String,
     val visibility: Double? = null,
     val uvIndex: Int? = null,
-    val pressure: Double? = null
+    val pressure: Double? = null,
+    val sunrise: String? = null,
+    val sunset: String? = null
 ) : Parcelable
 
 @Parcelize

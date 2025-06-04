@@ -73,10 +73,24 @@ fun WeatherScreen(
                 windSpeed = weatherData.currentWeather.windSpeed.toFloat()
             )
             
+            Spacer(modifier = Modifier.height(30.dp))
+            
+            // Sunrise/Sunset section
+            if (weatherData.currentWeather.sunrise != null && weatherData.currentWeather.sunset != null) {
+                SunriseSunsetSection(
+                    sunrise = weatherData.currentWeather.sunrise!!,
+                    sunset = weatherData.currentWeather.sunset!!
+                )
+                
+                Spacer(modifier = Modifier.height(30.dp))
+            }
+            
             Spacer(modifier = Modifier.height(40.dp))
             
             HourlyForecastSection(
-                hourlyForecast = weatherData.hourlyForecast.take(24)
+                hourlyForecast = weatherData.hourlyForecast.take(24),
+                sunriseTime = weatherData.currentWeather.sunrise,
+                sunsetTime = weatherData.currentWeather.sunset
             )
             
             Spacer(modifier = Modifier.height(40.dp))
@@ -261,7 +275,9 @@ private fun WeatherDetailItem(
 
 @Composable
 private fun HourlyForecastSection(
-    hourlyForecast: List<HourlyWeather>
+    hourlyForecast: List<HourlyWeather>,
+    sunriseTime: String?,
+    sunsetTime: String?
 ) {
     Column {
         LazyRow(
@@ -269,7 +285,7 @@ private fun HourlyForecastSection(
             contentPadding = PaddingValues(horizontal = 0.dp)
         ) {
             items(hourlyForecast.take(24)) { hour ->
-                HourlyForecastItem(hour = hour)
+                HourlyForecastItem(hour = hour, sunriseTime = sunriseTime, sunsetTime = sunsetTime)
             }
         }
     }
@@ -277,7 +293,10 @@ private fun HourlyForecastSection(
 
 @Composable
 private fun HourlyForecastItem(
-    hour: HourlyWeather
+    hour: HourlyWeather,
+    sunriseTime: String?,
+    sunsetTime: String?,
+    modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -290,15 +309,47 @@ private fun HourlyForecastItem(
             color = WeatherColors.WeatherTextTertiary
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         
-        // Weather icon (custom iOS-style icon)
-        WeatherIcon(
-            weatherCode = hour.weatherCode,
-            size = 30.dp,
-            timestamp = hour.timestamp,
-            modifier = Modifier.height(35.dp)
-        )
+        // Check if this hour matches sunrise or sunset time
+        val isSunriseHour = sunriseTime?.let { sunrise ->
+            // Extract hour from sunrise time (e.g., "6:45 AM" -> "6AM" or "6:45AM")
+            val sunriseHour = extractHourFromTime(sunrise)
+            hour.time == sunriseHour || hour.time.startsWith(sunriseHour.take(1))
+        } ?: false
+        
+        val isSunsetHour = sunsetTime?.let { sunset ->
+            // Extract hour from sunset time (e.g., "7:23 PM" -> "7PM" or "7:23PM")
+            val sunsetHour = extractHourFromTime(sunset)
+            hour.time == sunsetHour || hour.time.startsWith(sunsetHour.take(1))
+        } ?: false
+        
+        // Show sunrise/sunset indicator or weather icon
+        when {
+            isSunriseHour -> {
+                Text(
+                    text = "🌅",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.height(35.dp)
+                )
+            }
+            isSunsetHour -> {
+                Text(
+                    text = "🌇",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.height(35.dp)
+                )
+            }
+            else -> {
+                // Weather icon (custom iOS-style icon)
+                WeatherIcon(
+                    weatherCode = hour.weatherCode,
+                    size = 30.dp,
+                    timestamp = hour.timestamp,
+                    modifier = Modifier.height(35.dp)
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.height(12.dp))
         
@@ -308,6 +359,22 @@ private fun HourlyForecastItem(
             style = WeatherTextStyles.HourlyTemp,
             color = WeatherColors.WeatherTextPrimary
         )
+    }
+}
+
+// Helper function to extract hour from time string like "6:45 AM" -> "6AM"
+private fun extractHourFromTime(timeString: String): String {
+    return try {
+        val parts = timeString.split(":")
+        if (parts.size >= 2) {
+            val hour = parts[0]
+            val amPm = if (timeString.contains("AM")) "AM" else "PM"
+            "${hour}${amPm}"
+        } else {
+            timeString
+        }
+    } catch (e: Exception) {
+        timeString
     }
 }
 
@@ -454,6 +521,63 @@ private fun TemperatureRangeBar(
                     },
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp)
                 )
+        )
+    }
+}
+
+@Composable
+private fun SunriseSunsetSection(
+    sunrise: String,
+    sunset: String,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        SunriseSunsetItem(
+            title = "SUNRISE",
+            time = sunrise,
+            icon = "🌅"
+        )
+        
+        SunriseSunsetItem(
+            title = "SUNSET", 
+            time = sunset,
+            icon = "🌇"
+        )
+    }
+}
+
+@Composable
+private fun SunriseSunsetItem(
+    title: String,
+    time: String,
+    icon: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Text(
+            text = title,
+            style = WeatherTextStyles.SectionHeader,
+            color = WeatherColors.WeatherTextTertiary
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = icon,
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        
+        Text(
+            text = time,
+            style = WeatherTextStyles.WeatherCondition,
+            color = WeatherColors.WeatherTextPrimary
         )
     }
 } 

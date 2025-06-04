@@ -159,11 +159,17 @@ class WeatherRepositoryImpl @Inject constructor(
         val current = response.current
         val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(current.weatherCode)
         
+        // Extract today's sunrise and sunset times
+        val todaySunrise = response.daily.sunrise?.firstOrNull()?.let { formatSunTime(it) }
+        val todaySunset = response.daily.sunset?.firstOrNull()?.let { formatSunTime(it) }
+        
         // 🔍 DEBUG: Add extensive logging for Open-Meteo response
         println("🌤️ OPEN-METEO API RESPONSE DEBUG:")
         println("   Current Weather Code: ${current.weatherCode}")
         println("   Current Temperature: ${current.temperature2m}")
         println("   Current Condition: ${weatherInfo.description}")
+        println("   Sunrise: $todaySunrise")
+        println("   Sunset: $todaySunset")
         println("   Hourly Weather Codes (first 6): ${response.hourly.weatherCode.take(6)}")
         println("   Daily Weather Codes: ${response.daily.weatherCode}")
         println("   Raw API Response: $response")
@@ -192,7 +198,9 @@ class WeatherRepositoryImpl @Inject constructor(
                     current.windSpeed10m
                 ),
                 visibility = current.visibility,
-                pressure = current.surfacePressure
+                pressure = current.surfacePressure,
+                sunrise = todaySunrise,
+                sunset = todaySunset
             ),
             hourlyForecast = mapOpenMeteoHourlyForecast(response.hourly),
             dailyForecast = mapOpenMeteoDailyForecast(response.daily),
@@ -433,6 +441,8 @@ class WeatherRepositoryImpl @Inject constructor(
             visibility = weatherData.currentWeather.visibility,
             uvIndex = weatherData.currentWeather.uvIndex,
             pressure = weatherData.currentWeather.pressure,
+            sunrise = weatherData.currentWeather.sunrise,
+            sunset = weatherData.currentWeather.sunset,
             hourlyForecastJson = gson.toJson(weatherData.hourlyForecast),
             dailyForecastJson = gson.toJson(weatherData.dailyForecast),
             lastUpdated = weatherData.lastUpdated
@@ -464,7 +474,9 @@ class WeatherRepositoryImpl @Inject constructor(
                 description = entity.description,
                 visibility = entity.visibility,
                 uvIndex = entity.uvIndex,
-                pressure = entity.pressure
+                pressure = entity.pressure,
+                sunrise = entity.sunrise,
+                sunset = entity.sunset
             ),
             hourlyForecast = hourlyForecast,
             dailyForecast = dailyForecast,
@@ -583,6 +595,43 @@ class WeatherRepositoryImpl @Inject constructor(
             weatherDao.deleteOldWeatherData(oldTimestamp)
         } catch (e: Exception) {
             // Log error but don't fail
+        }
+    }
+
+    // Helper function to format sunrise/sunset times from ISO format to display format
+    private fun formatSunTime(isoTimeString: String): String {
+        return try {
+            val instant = Instant.parse(isoTimeString)
+            val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+            
+            // Format as "6:45 AM" or "7:23 PM"
+            val hour = localDateTime.hour
+            val minute = localDateTime.minute
+            val amPm = if (hour < 12) "AM" else "PM"
+            val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+            
+            "${displayHour}:${minute.toString().padStart(2, '0')} $amPm"
+        } catch (e: Exception) {
+            // Fallback parsing if ISO format fails
+            try {
+                // Sometimes the format might be "2024-01-15T06:45"
+                val parts = isoTimeString.split("T")
+                if (parts.size == 2) {
+                    val timePart = parts[1]
+                    val timeParts = timePart.split(":")
+                    if (timeParts.size >= 2) {
+                        val hour = timeParts[0].toInt()
+                        val minute = timeParts[1].toInt()
+                        val amPm = if (hour < 12) "AM" else "PM"
+                        val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+                        
+                        return "${displayHour}:${minute.toString().padStart(2, '0')} $amPm"
+                    }
+                }
+            } catch (e2: Exception) {
+                // Ignore and return original
+            }
+            isoTimeString // Return original if parsing fails
         }
     }
 } 

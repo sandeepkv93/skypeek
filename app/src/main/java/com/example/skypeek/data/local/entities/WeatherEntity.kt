@@ -26,6 +26,8 @@ data class WeatherEntity(
     val visibility: Double? = null,
     val uvIndex: Int? = null,
     val pressure: Double? = null,
+    val sunrise: String? = null,
+    val sunset: String? = null,
     val hourlyForecastJson: String, // JSON string of List<HourlyWeather>
     val dailyForecastJson: String, // JSON string of List<DailyWeather>
     val lastUpdated: Long
