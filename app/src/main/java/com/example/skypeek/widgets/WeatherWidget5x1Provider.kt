@@ -53,47 +53,20 @@ class WeatherWidget5x1Provider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        val views = RemoteViews(context.packageName, R.layout.weather_widget_5x1)
+        // Immediately show fallback data so widget is never stuck in loading state
+        showFallbackWidget5x1(context, appWidgetManager, appWidgetId)
         
-        // Set up click handlers first
-        setupWidget5x1ClickHandlers(context, views)
-        
-        // Show loading state initially
-        views.apply {
-            setTextViewText(R.id.widget_city_name, "Loading...")
-            setTextViewText(R.id.widget_temperature, "--°")
-            setTextViewText(R.id.widget_condition, "Getting weather...")
-            setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
-            // Clear any previous hourly data
-            setTextViewText(R.id.widget_hour1_time, "--")
-            setTextViewText(R.id.widget_hour1_temp, "--°")
-            setTextViewText(R.id.widget_hour2_time, "--")
-            setTextViewText(R.id.widget_hour2_temp, "--°")
-            setTextViewText(R.id.widget_hour3_time, "--")
-            setTextViewText(R.id.widget_hour3_temp, "--°")
-            setImageViewResource(R.id.widget_hour1_icon, R.drawable.ic_cloudy)
-            setImageViewResource(R.id.widget_hour2_icon, R.drawable.ic_cloudy)
-            setImageViewResource(R.id.widget_hour3_icon, R.drawable.ic_cloudy)
-        }
-        
-        // Update widget immediately with loading state and click handlers
-        appWidgetManager.updateAppWidget(appWidgetId, views)
-        
-        // Start the weather service to fetch real data
+        // Then try to get real data via service
         try {
             val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
                 action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                 putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_5X1)
             }
-            val result = context.startService(serviceIntent)
-            if (result == null) {
-                // Service couldn't start, show fallback data
-                showFallbackWidget5x1(context, appWidgetManager, appWidgetId)
-            }
+            context.startService(serviceIntent)
+            // Note: If service succeeds, it will update the widget with real data
         } catch (e: Exception) {
-            // If service fails to start, show fallback data
-            showFallbackWidget5x1(context, appWidgetManager, appWidgetId)
+            // Fallback data is already shown, so nothing more to do
         }
     }
     

@@ -178,8 +178,15 @@ class WeatherWidgetService : Service() {
     private fun updateWidget5x1(appWidgetId: Int, weather: WeatherData) {
         val views = RemoteViews(packageName, R.layout.weather_widget_5x1)
         
+        // Ensure we have a valid city name
+        val cityName = when {
+            weather.location.cityName.isNotBlank() -> weather.location.cityName
+            weather.location.cityName.isBlank() && weather.location.country.isNotBlank() -> weather.location.country
+            else -> "San Jose" // Fallback
+        }
+        
         views.apply {
-            setTextViewText(R.id.widget_city_name, weather.location.cityName)
+            setTextViewText(R.id.widget_city_name, cityName)
             setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
             setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
             setTextViewText(
@@ -219,8 +226,15 @@ class WeatherWidgetService : Service() {
     private fun updateWidget5x2(appWidgetId: Int, weather: WeatherData) {
         val views = RemoteViews(packageName, R.layout.weather_widget_5x2)
         
+        // Ensure we have a valid city name
+        val cityName = when {
+            weather.location.cityName.isNotBlank() -> weather.location.cityName
+            weather.location.cityName.isBlank() && weather.location.country.isNotBlank() -> weather.location.country
+            else -> "San Jose" // Fallback
+        }
+        
         views.apply {
-            setTextViewText(R.id.widget_city_name, weather.location.cityName)
+            setTextViewText(R.id.widget_city_name, cityName)
             setTextViewText(R.id.widget_temperature, "${weather.currentWeather.temperature}°")
             setTextViewText(R.id.widget_condition, weather.currentWeather.condition)
             setTextViewText(
