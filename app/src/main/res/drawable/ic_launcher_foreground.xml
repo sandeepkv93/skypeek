@@ -1,91 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <!-- Main eye shape representing "Peek" -->
-    <path
-        android:pathData="M54,35C70,35 84,45 84,54C84,63 70,73 54,73C38,73 24,63 24,54C24,45 38,35 54,35Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="54"
-                android:startY="35"
-                android:endX="54"
-                android:endY="73"
-                android:type="linear">
-                <item android:color="#FFFFFF" android:offset="0.0" />
-                <item android:color="#F0F8FF" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    
-    <!-- Iris - representing the sky view -->
-    <path
-        android:pathData="M54,42C62,42 68,47 68,54C68,61 62,66 54,66C46,66 40,61 40,54C40,47 46,42 54,42Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:startX="54"
-                android:startY="42"
-                android:endX="54"
-                android:endY="66"
-                android:type="radial"
-                android:centerX="54"
-                android:centerY="50"
-                android:gradientRadius="14">
-                <item android:color="#4A90E2" android:offset="0.0" />
-                <item android:color="#87CEEB" android:offset="0.6" />
-                <item android:color="#2E5984" android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    
-    <!-- Pupil with sun reflection -->
-    <path
-        android:fillColor="#1a1a1a"
-        android:pathData="M54,47C58.4,47 62,50.6 62,55C62,59.4 58.4,63 54,63C49.6,63 46,59.4 46,55C46,50.6 49.6,47 54,47Z"/>
-    
-    <!-- Sun reflection in the eye -->
+    <!-- Sun positioned like iOS Weather app -->
     <path
         android:fillColor="#FFD700"
-        android:pathData="M57,50C58.7,50 60,51.3 60,53C60,54.7 58.7,56 57,56C55.3,56 54,54.7 54,53C54,51.3 55.3,50 57,50Z"/>
+        android:pathData="M54,30C59.5,30 64,34.5 64,40C64,45.5 59.5,50 54,50C48.5,50 44,45.5 44,40C44,34.5 48.5,30 54,30Z"/>
     
-    <!-- Smaller highlight -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M51,51C51.8,51 52.5,51.7 52.5,52.5C52.5,53.3 51.8,54 51,54C50.2,54 49.5,53.3 49.5,52.5C49.5,51.7 50.2,51 51,51Z"/>
-    
-    <!-- Cloud formations around the eye (representing weather) -->
-    <!-- Left cloud -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.9"
-        android:pathData="M15,45C18,45 20.5,47.5 20.5,50.5C20.5,51.2 20.3,51.8 20,52.3C21,53.1 21.7,54.3 21.7,55.7C21.7,57.7 20.1,59.3 18.1,59.3L12.3,59.3C10.3,59.3 8.7,57.7 8.7,55.7C8.7,54.3 9.4,53.1 10.4,52.3C10.1,51.8 9.9,51.2 9.9,50.5C9.9,47.5 12.4,45 15.4,45C15.4,43.1 17,41.5 19,41.5C21,41.5 22.6,43.1 22.6,45C22.6,45 18.8,45 15,45Z"/>
-    
-    <!-- Right cloud -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.9"
-        android:pathData="M93,48C96,48 98.5,50.5 98.5,53.5C98.5,54.2 98.3,54.8 98,55.3C99,56.1 99.7,57.3 99.7,58.7C99.7,60.7 98.1,62.3 96.1,62.3L90.3,62.3C88.3,62.3 86.7,60.7 86.7,58.7C86.7,57.3 87.4,56.1 88.4,55.3C88.1,54.8 87.9,54.2 87.9,53.5C87.9,50.5 90.4,48 93.4,48C93.4,46.1 95,44.5 97,44.5C99,44.5 100.6,46.1 100.6,48C100.6,48 96.8,48 93,48Z"/>
-    
-    <!-- Top cloud -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillAlpha="0.8"
-        android:pathData="M54,18C57,18 59.5,20.5 59.5,23.5C59.5,24.2 59.3,24.8 59,25.3C60,26.1 60.7,27.3 60.7,28.7C60.7,30.7 59.1,32.3 57.1,32.3L51.3,32.3C49.3,32.3 47.7,30.7 47.7,28.7C47.7,27.3 48.4,26.1 49.4,25.3C49.1,24.8 48.9,24.2 48.9,23.5C48.9,20.5 51.4,18 54.4,18C54.4,16.1 56,14.5 58,14.5C60,14.5 61.6,16.1 61.6,18C61.6,18 57.8,18 54,18Z"/>
-    
-    <!-- Weather icons in the iris (subtle) -->
-    <!-- Tiny sun -->
+    <!-- Sun rays -->
     <path
         android:fillColor="#FFD700"
-        android:fillAlpha="0.3"
-        android:pathData="M49,50L49,51M50.5,48.5L50,49.5M52,48L51.5,49M53.5,48.5L53,49.5M55,50L55,51"/>
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M54,20L54,26M66,24L63.5,29M74,40L69,40M66,56L63.5,51M54,60L54,54M42,56L44.5,51M34,40L39,40M42,24L44.5,29"/>
     
-    <!-- Tiny droplet -->
+    <!-- Simple iOS-style cloud -->
     <path
-        android:fillColor="#2196F3"
-        android:fillAlpha="0.3"
-        android:pathData="M59,58C59,58.8 58.3,59.5 57.5,59.5C56.7,59.5 56,58.8 56,58C56,57.2 57.5,55.5 57.5,55.5S59,57.2 59,58Z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,65C30,62 32,60 35,60C35,57 38,55 42,55C45,53 49,55 52,57C54,55 58,55 62,57C65,55 69,57 72,60C75,60 77,62 77,65C77,68 75,70 72,70L35,70C32,70 30,68 30,65Z"/>
+    
+    <!-- Cloud shadow for iOS-like depth -->
+    <path
+        android:fillColor="#F0F0F0"
+        android:pathData="M30,68C30,68 32,68 35,68C35,68 38,68 42,68C45,68 49,68 52,68C54,68 58,68 62,68C65,68 69,68 72,68C75,68 77,68 77,68C77,69 75,70 72,70L35,70C32,70 30,69 30,68Z"/>
+    
 </vector>
