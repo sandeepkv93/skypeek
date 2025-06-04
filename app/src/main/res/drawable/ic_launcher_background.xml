@@ -6,22 +6,49 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <!-- Simple gradient background -->
+    <!-- Dynamic sky gradient background representing day-to-night transition -->
     <path android:pathData="M0,0h108v108h-108z">
-        <aapt:attr name="android:fillColor" xmlns:aapt="http://schemas.android.com/aapt">
+        <aapt:attr name="android:fillColor">
             <gradient
-                android:startX="54"
+                android:startX="0"
                 android:startY="0"
-                android:endX="54"
+                android:endX="108"
                 android:endY="108"
                 android:type="linear">
+                <!-- Dawn colors -->
+                <item
+                    android:color="#FF6B93"
+                    android:offset="0.0" />
+                <!-- Morning sky -->
                 <item
                     android:color="#4A90E2"
-                    android:offset="0.0" />
+                    android:offset="0.3" />
+                <!-- Midday blue -->
                 <item
                     android:color="#87CEEB"
+                    android:offset="0.6" />
+                <!-- Evening golden -->
+                <item
+                    android:color="#FFB347"
+                    android:offset="0.8" />
+                <!-- Night purple -->
+                <item
+                    android:color="#2E1065"
                     android:offset="1.0" />
             </gradient>
         </aapt:attr>
     </path>
+    
+    <!-- Subtle cloud texture overlay -->
+    <path 
+        android:fillColor="#20FFFFFF"
+        android:pathData="M15,25C25,22 35,28 45,25C55,22 65,28 75,25C85,22 95,28 105,25L105,35C95,32 85,38 75,35C65,32 55,38 45,35C35,32 25,38 15,35Z"/>
+    
+    <path 
+        android:fillColor="#15FFFFFF"
+        android:pathData="M10,45C20,42 30,48 40,45C50,42 60,48 70,45C80,42 90,48 100,45L100,55C90,52 80,58 70,55C60,52 50,58 40,55C30,52 20,58 10,55Z"/>
+    
+    <path 
+        android:fillColor="#10FFFFFF"
+        android:pathData="M5,65C15,62 25,68 35,65C45,62 55,68 65,65C75,62 85,68 95,65L95,75C85,72 75,78 65,75C55,72 45,78 35,75C25,72 15,78 5,75Z"/>
 </vector>
