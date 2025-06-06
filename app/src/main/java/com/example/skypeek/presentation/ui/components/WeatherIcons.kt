@@ -74,27 +74,16 @@ fun WeatherIcon(
 fun SunnyIcon(
     modifier: Modifier = Modifier
 ) {
-    // Smooth rotating animation for sun rays
+    // Optimized sun animations - reduced complexity
     val infiniteTransition = rememberInfiniteTransition(label = "sun_rotation")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 20000, easing = LinearEasing),
+            animation = tween(durationMillis = 30000, easing = LinearEasing), // Slower rotation
             repeatMode = RepeatMode.Restart
         ),
         label = "sun_rays_rotation"
-    )
-    
-    // Gentle pulsing for sun glow
-    val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 3000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "sun_glow_pulse"
     )
 
     Canvas(modifier = modifier) {
@@ -115,17 +104,17 @@ fun SunnyIcon(
             radius = sunRadius
         )
         
-        // Animated outer glow effect
+        // Simple outer glow - no animation for better performance
         drawCircle(
-            color = Color(0x20FFEB3B),
-            radius = sunRadius * 1.3f * glowPulse,
+            color = Color(0x15FFEB3B),
+            radius = sunRadius * 1.2f,
             center = center
         )
         
-        // Draw animated sun rays with rotation
+        // Reduced sun rays for better performance
         rotate(rotation, center) {
-            for (i in 0 until 8) {
-                val angle = (i * 45.0) * PI / 180.0
+            for (i in 0 until 6) {
+                val angle = (i * 60.0) * PI / 180.0
                 val rayStart = Offset(
                     center.x + (rayStartDistance * cos(angle)).toFloat(),
                     center.y + (rayStartDistance * sin(angle)).toFloat()
@@ -348,14 +337,11 @@ fun RainyIcon(
             shadowIntensity = 0.25f
         )
         
-        // Animated rain drops
+        // Reduced rain drops for better performance
         val rainDrops = listOf(
-            Triple(0.15f, 0.55f, 1.0f),   // x, y, size
-            Triple(0.3f, 0.6f, 0.9f),
-            Triple(0.45f, 0.55f, 1.1f),
-            Triple(0.6f, 0.6f, 0.8f),
-            Triple(0.75f, 0.55f, 1.0f),
-            Triple(0.85f, 0.58f, 0.9f)
+            Triple(0.2f, 0.55f, 1.0f),   // x, y, size
+            Triple(0.5f, 0.6f, 0.9f),
+            Triple(0.8f, 0.55f, 1.0f)
         )
         
         rainDrops.forEachIndexed { index, (x, yStart, sizeScale) ->
@@ -419,13 +405,10 @@ fun SnowyIcon(
             shadowIntensity = 0.15f
         )
         
-        // Animated snowflakes
+        // Reduced snowflakes for better performance
         val snowflakes = listOf(
-            Triple(0.2f, 0.55f, 1.0f),
-            Triple(0.35f, 0.65f, 0.8f),
-            Triple(0.5f, 0.58f, 1.2f),
-            Triple(0.65f, 0.67f, 0.9f),
-            Triple(0.8f, 0.6f, 0.7f)
+            Triple(0.3f, 0.55f, 1.0f),
+            Triple(0.7f, 0.65f, 0.9f)
         )
         
         snowflakes.forEachIndexed { index, (x, y, scale) ->
@@ -708,7 +691,7 @@ fun PartlyCloudyNightIcon(
     }
 }
 
-// Enhanced iOS cloud with shadow and gradient
+// Optimized iOS cloud with minimal memory footprint
 private fun DrawScope.drawIOSCloudWithShadow(
     center: Offset,
     scale: Float,
@@ -716,65 +699,35 @@ private fun DrawScope.drawIOSCloudWithShadow(
 ) {
     val baseRadius = size.minDimension * 0.08f * scale
     
-    // Cloud gradient for 3D effect
-    val cloudGradient = Brush.radialGradient(
-        colors = listOf(
-            cloudColor,
-            cloudColor.copy(alpha = 0.9f),
-            cloudColor.copy(alpha = 0.8f)
-        ),
-        center = Offset(center.x - baseRadius * 0.3f, center.y - baseRadius * 0.3f),
-        radius = baseRadius * 2f
+    // Simplified cloud structure - reduced from 23 to 8 circles
+    val optimizedCloudParts = listOf(
+        Triple(0.0f, 0.4f, 1.4f),       // Center bottom
+        Triple(-0.5f, 0.4f, 1.2f),      // Left bottom
+        Triple(0.5f, 0.4f, 1.2f),       // Right bottom
+        Triple(-0.8f, 0.15f, 1.0f),     // Far left
+        Triple(0.8f, 0.15f, 1.0f),      // Far right
+        Triple(-0.15f, -0.3f, 0.85f),   // Top left-center
+        Triple(0.15f, -0.3f, 0.85f),    // Top right-center
+        Triple(0.0f, -0.4f, 0.8f),      // Top center peak
     )
     
-    // Shadow first (slightly offset)
-    val shadowCenter = Offset(center.x + baseRadius * 0.1f, center.y + baseRadius * 0.1f)
-    drawPerfectIOSCloud(shadowCenter, scale, Color(0x20000000))
-    
-    // Main cloud with gradient
-    drawPerfectIOSCloudGradient(center, scale, cloudGradient, cloudColor)
-}
-
-// Enhanced cloud drawing with gradient support
-private fun DrawScope.drawPerfectIOSCloudGradient(
-    center: Offset,
-    scale: Float,
-    gradient: Brush,
-    fallbackColor: Color
-) {
-    val baseRadius = size.minDimension * 0.08f * scale
-    
-    val cloudParts = listOf(
-        // BOTTOM LAYER - creates the flat base like iOS
-        Triple(0.0f, 0.4f, 1.4f),      // Center bottom
-        Triple(-0.5f, 0.4f, 1.2f),     // Left bottom
-        Triple(0.5f, 0.4f, 1.2f),      // Right bottom
-        
-        // SIDE BUMPS
-        Triple(-0.8f, 0.15f, 1.0f),    // Far left
-        Triple(0.8f, 0.15f, 1.0f),     // Far right
-        Triple(-0.6f, 0.05f, 0.85f),   // Inner left
-        Triple(0.6f, 0.05f, 0.85f),    // Inner right
-        
-        // TOP LAYER
-        Triple(-0.5f, -0.2f, 0.9f),    // Top left
-        Triple(-0.15f, -0.3f, 0.85f),  // Top left-center
-        Triple(0.15f, -0.3f, 0.85f),   // Top right-center
-        Triple(0.5f, -0.2f, 0.9f),     // Top right
-        Triple(0.0f, -0.4f, 0.8f),     // Top center peak
-        
-        // CONNECTING PIECES
-        Triple(-0.35f, 0.2f, 0.7f),    // Bottom left connector
-        Triple(0.35f, 0.2f, 0.7f),     // Bottom right connector
-        Triple(-0.25f, -0.05f, 0.65f), // Mid left
-        Triple(0.25f, -0.05f, 0.65f),  // Mid right
-        Triple(0.0f, 0.05f, 0.75f),    // Center fill
-    )
-    
-    // Draw all parts
-    cloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
+    // Draw shadow (single pass)
+    val shadowCenter = Offset(center.x + baseRadius * 0.05f, center.y + baseRadius * 0.05f)
+    optimizedCloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
         drawCircle(
-            color = fallbackColor,
+            color = Color(0x15000000),
+            radius = baseRadius * sizeMultiplier,
+            center = Offset(
+                shadowCenter.x + baseRadius * xOffset,
+                shadowCenter.y + baseRadius * yOffset
+            )
+        )
+    }
+    
+    // Draw main cloud (single pass)
+    optimizedCloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
+        drawCircle(
+            color = cloudColor,
             radius = baseRadius * sizeMultiplier,
             center = Offset(
                 center.x + baseRadius * xOffset,
@@ -784,130 +737,33 @@ private fun DrawScope.drawPerfectIOSCloudGradient(
     }
 }
 
-// Perfect iOS cloud drawing function - COMPLETELY REDESIGNED FOR ACCURACY
-private fun DrawScope.drawPerfectIOSCloud(
-    center: Offset,
-    scale: Float,
-    color: Color = Color.White
-) {
-    // Smaller base radius for more accurate proportions
-    val baseRadius = size.minDimension * 0.06f * scale
-    
-    // iOS Weather app cloud - analyzed from actual app screenshots
-    // The cloud has a specific shape: wide flat bottom, rounded bumps on top
-    val cloudParts = listOf(
-        // BOTTOM LAYER - creates the flat base like iOS
-        Triple(0.0f, 0.45f, 1.5f),      // Center bottom - very large and low
-        Triple(-0.6f, 0.45f, 1.3f),     // Left bottom extension
-        Triple(0.6f, 0.45f, 1.3f),      // Right bottom extension
-        
-        // SIDE BUMPS - characteristic iOS side bulges  
-        Triple(-1.0f, 0.2f, 1.1f),      // Far left bump
-        Triple(1.0f, 0.2f, 1.1f),       // Far right bump
-        Triple(-0.7f, 0.1f, 0.9f),      // Inner left
-        Triple(0.7f, 0.1f, 0.9f),       // Inner right
-        
-        // TOP LAYER - creates the puffy top characteristic of iOS clouds
-        Triple(-0.6f, -0.15f, 1.0f),    // Top left main
-        Triple(-0.2f, -0.25f, 0.95f),   // Top left-center
-        Triple(0.2f, -0.25f, 0.95f),    // Top right-center  
-        Triple(0.6f, -0.15f, 1.0f),     // Top right main
-        Triple(0.0f, -0.35f, 0.9f),     // Top center peak
-        
-        // CONNECTING PIECES - fills gaps for smooth iOS look
-        Triple(-0.4f, 0.25f, 0.8f),     // Bottom left connector
-        Triple(0.4f, 0.25f, 0.8f),      // Bottom right connector
-        Triple(-0.3f, 0.0f, 0.7f),      // Mid left
-        Triple(0.3f, 0.0f, 0.7f),       // Mid right
-        Triple(0.0f, 0.1f, 0.8f),       // Center fill
-        
-        // SMOOTHING CIRCLES - tiny circles to perfect the iOS smoothness
-        Triple(-0.8f, 0.3f, 0.4f),      // Left edge smoother
-        Triple(0.8f, 0.3f, 0.4f),       // Right edge smoother
-        Triple(-0.4f, -0.1f, 0.5f),     // Top left smoother
-        Triple(0.4f, -0.1f, 0.5f),      // Top right smoother
-    )
-    
-    // Draw all parts with perfect overlap like iOS
-    cloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
-        drawCircle(
-            color = color,
-            radius = baseRadius * sizeMultiplier,
-            center = Offset(
-                center.x + baseRadius * xOffset,
-                center.y + baseRadius * yOffset
-            )
-        )
-    }
-}
 
-// Enhanced iOS-style snowflake helper function
+
+// Memory-optimized snowflake function
 private fun DrawScope.drawIOSSnowflake(
     center: Offset,
     radius: Float,
     color: Color
 ) {
-    // Draw main center circle
+    // Simplified snowflake - just 4 main arms instead of 6 with branches
     drawCircle(
         color = color,
         radius = radius * 0.15f,
         center = center
     )
     
-    // Draw 6 main arms with iOS styling
-    for (i in 0 until 6) {
-        val angle = (i * 60.0) * PI / 180.0
+    // Draw 4 main arms only (reduced complexity)
+    for (i in 0 until 4) {
+        val angle = (i * 90.0) * PI / 180.0
         val endX = center.x + (radius * cos(angle)).toFloat()
         val endY = center.y + (radius * sin(angle)).toFloat()
         
-        // Main arm
         drawLine(
             color = color,
             start = center,
             end = Offset(endX, endY),
-            strokeWidth = radius * 0.12f,
+            strokeWidth = radius * 0.1f,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
-        
-        // Add small branches (iOS detail)
-        val branchLength = radius * 0.35f
-        val branchAngle1 = angle + PI / 4
-        val branchAngle2 = angle - PI / 4
-        
-        val branchStart = Offset(
-            center.x + (radius * 0.6f * cos(angle)).toFloat(),
-            center.y + (radius * 0.6f * sin(angle)).toFloat()
-        )
-        
-        // Branch 1
-        drawLine(
-            color = color,
-            start = branchStart,
-            end = Offset(
-                branchStart.x + (branchLength * cos(branchAngle1)).toFloat(),
-                branchStart.y + (branchLength * sin(branchAngle1)).toFloat()
-            ),
-            strokeWidth = radius * 0.08f,
-            cap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
-        
-        // Branch 2
-        drawLine(
-            color = color,
-            start = branchStart,
-            end = Offset(
-                branchStart.x + (branchLength * cos(branchAngle2)).toFloat(),
-                branchStart.y + (branchLength * sin(branchAngle2)).toFloat()
-            ),
-            strokeWidth = radius * 0.08f,
-            cap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
-        
-        // Arm end decoration
-        drawCircle(
-            color = color,
-            radius = radius * 0.08f,
-            center = Offset(endX, endY)
         )
     }
 }
@@ -923,7 +779,7 @@ private fun isNightTime(timestamp: Long): Boolean {
     return hour >= 20 || hour < 6
 }
 
-// Simplified cloud drawing function to prevent crashes
+// Memory-optimized cloud drawing function
 private fun DrawScope.drawEnhancedIOSCloud(
     center: Offset,
     scale: Float,
@@ -932,35 +788,17 @@ private fun DrawScope.drawEnhancedIOSCloud(
 ) {
     val baseRadius = size.minDimension * 0.08f * scale
     
-    // Simplified cloud structure to reduce memory usage
+    // Drastically simplified cloud structure - only 6 circles instead of 17
     val cloudParts = listOf(
-        // BOTTOM LAYER
         Triple(0.0f, 0.4f, 1.4f),       // Center bottom
-        Triple(-0.5f, 0.4f, 1.2f),      // Left bottom
-        Triple(0.5f, 0.4f, 1.2f),       // Right bottom
-        
-        // SIDE BUMPS
-        Triple(-0.8f, 0.15f, 1.0f),     // Far left
-        Triple(0.8f, 0.15f, 1.0f),      // Far right
-        Triple(-0.6f, 0.05f, 0.85f),    // Inner left
-        Triple(0.6f, 0.05f, 0.85f),     // Inner right
-        
-        // TOP LAYER
-        Triple(-0.5f, -0.2f, 0.9f),     // Top left
-        Triple(-0.15f, -0.3f, 0.85f),   // Top left-center
-        Triple(0.15f, -0.3f, 0.85f),    // Top right-center
-        Triple(0.5f, -0.2f, 0.9f),      // Top right
-        Triple(0.0f, -0.4f, 0.8f),      // Top center peak
-        
-        // CONNECTING PIECES
-        Triple(-0.35f, 0.2f, 0.7f),     // Bottom left connector
-        Triple(0.35f, 0.2f, 0.7f),      // Bottom right connector
-        Triple(-0.25f, -0.05f, 0.65f),  // Mid left
-        Triple(0.25f, -0.05f, 0.65f),   // Mid right
-        Triple(0.0f, 0.05f, 0.75f),     // Center fill
+        Triple(-0.6f, 0.2f, 1.0f),      // Left side
+        Triple(0.6f, 0.2f, 1.0f),       // Right side
+        Triple(-0.2f, -0.3f, 0.85f),    // Top left
+        Triple(0.2f, -0.3f, 0.85f),     // Top right
+        Triple(0.0f, -0.35f, 0.8f),     // Top center
     )
     
-    // Draw all parts efficiently
+    // Single pass drawing - no shadow for better performance
     cloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
         drawCircle(
             color = cloudColor,
