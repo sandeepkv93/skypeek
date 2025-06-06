@@ -48,6 +48,10 @@ fun WeatherIcon(
         in 45..48 -> {
             FoggyIcon(modifier = modifier.size(size))
         }
+        // Mist/Haze codes (if any additional ones exist)
+        in 700..799 -> {
+            FoggyIcon(modifier = modifier.size(size))
+        }
         // FIXED: Proper rain codes (including freezing rain but not snow)
         51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82 -> {
             RainyIcon(modifier = modifier.size(size))
@@ -453,7 +457,7 @@ fun SnowyIcon(
 fun StormyIcon(
     modifier: Modifier = Modifier
 ) {
-    // Lightning flash animation
+    // Simplified lightning flash animation
     val infiniteTransition = rememberInfiniteTransition(label = "storm_animation")
     val lightningFlash by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -486,10 +490,10 @@ fun StormyIcon(
     )
 
     Canvas(modifier = modifier) {
-        // Animated WIDER storm cloud with rumbling
+        // Animated storm cloud with rumbling
         drawEnhancedIOSCloud(
             center = Offset(size.width / 2f + cloudRumble, size.height * 0.2f),
-            scale = 1.3f, // Much wider and more imposing for storms
+            scale = 1.3f,
             cloudColor = Color(0xFF666666),
             shadowIntensity = 0.3f
         )
@@ -527,7 +531,7 @@ fun StormyIcon(
 fun FoggyIcon(
     modifier: Modifier = Modifier
 ) {
-    // Flowing fog animation
+    // Simplified flowing fog animation
     val infiniteTransition = rememberInfiniteTransition(label = "fog_animation")
     val fogFlow by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -554,7 +558,7 @@ fun FoggyIcon(
             val alpha = 0.9f - (index * 0.1f)
             val thickness = size.minDimension * (0.025f - index * 0.002f)
             
-            // Animated flowing offset
+            // Simplified flowing animation
             val flowOffset = (fogFlow + index * 0.2f) % 1f
             val animatedStartX = startX + (sin(flowOffset * 2 * PI).toFloat() * 0.05f)
             val animatedLength = length + (cos(flowOffset * 2 * PI).toFloat() * 0.1f)
@@ -919,78 +923,44 @@ private fun isNightTime(timestamp: Long): Boolean {
     return hour >= 20 || hour < 6
 }
 
-// Enhanced cloud drawing function for better cloudy icon
+// Simplified cloud drawing function to prevent crashes
 private fun DrawScope.drawEnhancedIOSCloud(
     center: Offset,
     scale: Float,
     cloudColor: Color = Color.White,
     shadowIntensity: Float = 0.2f
 ) {
-    val baseRadius = size.minDimension * 0.12f * scale // Increased from 0.09f for wider clouds
+    val baseRadius = size.minDimension * 0.08f * scale
     
-    // Enhanced cloud gradient for more depth
-    val cloudGradient = Brush.radialGradient(
-        colors = listOf(
-            cloudColor,
-            cloudColor.copy(alpha = 0.95f),
-            cloudColor.copy(alpha = 0.85f),
-            cloudColor.copy(alpha = 0.75f)
-        ),
-        center = Offset(center.x - baseRadius * 0.2f, center.y - baseRadius * 0.3f),
-        radius = baseRadius * 2.5f
-    )
-    
-    // Multiple shadow layers for realistic depth
-    val shadowCenter1 = Offset(center.x + baseRadius * 0.08f, center.y + baseRadius * 0.12f)
-    val shadowCenter2 = Offset(center.x + baseRadius * 0.15f, center.y + baseRadius * 0.18f)
-    
-    // Draw shadow layers
-    drawPerfectIOSCloud(shadowCenter2, scale * 1.02f, Color(0x10000000))
-    drawPerfectIOSCloud(shadowCenter1, scale * 1.01f, Color(0x15000000))
-    
-    // iOS-accurate cloud structure with MORE EXPANSIVE proportions
+    // Simplified cloud structure to reduce memory usage
     val cloudParts = listOf(
-        // BOTTOM FOUNDATION - Much wider flat base
-        Triple(0.0f, 0.35f, 1.8f),      // Main bottom center - WIDER
-        Triple(-0.6f, 0.35f, 1.5f),     // Left extension - EXTENDED
-        Triple(0.6f, 0.35f, 1.5f),      // Right extension - EXTENDED
-        Triple(-0.9f, 0.25f, 1.2f),     // Far left - EXTENDED
-        Triple(0.9f, 0.25f, 1.2f),      // Far right - EXTENDED
-        Triple(-1.1f, 0.3f, 0.8f),      // Extra far left
-        Triple(1.1f, 0.3f, 0.8f),       // Extra far right
+        // BOTTOM LAYER
+        Triple(0.0f, 0.4f, 1.4f),       // Center bottom
+        Triple(-0.5f, 0.4f, 1.2f),      // Left bottom
+        Triple(0.5f, 0.4f, 1.2f),       // Right bottom
         
-        // MIDDLE LAYER - Wider side bulges
-        Triple(-0.75f, 0.05f, 1.3f),    // Left bulge - EXTENDED
-        Triple(0.75f, 0.05f, 1.3f),     // Right bulge - EXTENDED
-        Triple(-0.4f, 0.15f, 1.0f),     // Inner left - WIDER
-        Triple(0.4f, 0.15f, 1.0f),      // Inner right - WIDER
-        Triple(0.0f, 0.1f, 1.2f),       // Center fill - WIDER
-        Triple(-0.2f, 0.2f, 0.9f),      // Left center
-        Triple(0.2f, 0.2f, 0.9f),       // Right center
+        // SIDE BUMPS
+        Triple(-0.8f, 0.15f, 1.0f),     // Far left
+        Triple(0.8f, 0.15f, 1.0f),      // Far right
+        Triple(-0.6f, 0.05f, 0.85f),    // Inner left
+        Triple(0.6f, 0.05f, 0.85f),     // Inner right
         
-        // TOP LAYER - More expansive puffy top
-        Triple(-0.5f, -0.25f, 1.1f),    // Top left main - EXTENDED
-        Triple(-0.15f, -0.35f, 1.0f),   // Top left-center - WIDER
-        Triple(0.15f, -0.35f, 1.0f),    // Top right-center - WIDER
-        Triple(0.5f, -0.25f, 1.1f),     // Top right main - EXTENDED
-        Triple(0.0f, -0.45f, 0.95f),    // Top center peak - WIDER
-        Triple(-0.3f, -0.15f, 0.9f),    // Top left fill - EXTENDED
-        Triple(0.3f, -0.15f, 0.9f),     // Top right fill - EXTENDED
-        Triple(-0.65f, -0.1f, 0.7f),    // Far top left
-        Triple(0.65f, -0.1f, 0.7f),     // Far top right
+        // TOP LAYER
+        Triple(-0.5f, -0.2f, 0.9f),     // Top left
+        Triple(-0.15f, -0.3f, 0.85f),   // Top left-center
+        Triple(0.15f, -0.3f, 0.85f),    // Top right-center
+        Triple(0.5f, -0.2f, 0.9f),      // Top right
+        Triple(0.0f, -0.4f, 0.8f),      // Top center peak
         
-        // EXTRA WIDE EXTENSIONS - New additions for fullness
-        Triple(-0.8f, 0.15f, 0.7f),     // Left edge smooth - EXTENDED
-        Triple(0.8f, 0.15f, 0.7f),      // Right edge smooth - EXTENDED
-        Triple(-0.35f, -0.05f, 0.8f),   // Top left smooth - WIDER
-        Triple(0.35f, -0.05f, 0.8f),    // Top right smooth - WIDER
-        Triple(-0.6f, -0.1f, 0.7f),     // Mid left smooth - EXTENDED
-        Triple(0.6f, -0.1f, 0.7f),      // Mid right smooth - EXTENDED
-        Triple(-0.95f, 0.2f, 0.5f),     // Extra left extension
-        Triple(0.95f, 0.2f, 0.5f),      // Extra right extension
+        // CONNECTING PIECES
+        Triple(-0.35f, 0.2f, 0.7f),     // Bottom left connector
+        Triple(0.35f, 0.2f, 0.7f),      // Bottom right connector
+        Triple(-0.25f, -0.05f, 0.65f),  // Mid left
+        Triple(0.25f, -0.05f, 0.65f),   // Mid right
+        Triple(0.0f, 0.05f, 0.75f),     // Center fill
     )
     
-    // Draw all cloud parts with gradient
+    // Draw all parts efficiently
     cloudParts.forEach { (xOffset, yOffset, sizeMultiplier) ->
         drawCircle(
             color = cloudColor,
@@ -1001,14 +971,4 @@ private fun DrawScope.drawEnhancedIOSCloud(
             )
         )
     }
-    
-    // Add subtle highlight on top for iOS realism - WIDER highlight
-    drawCircle(
-        color = Color(0x20FFFFFF),
-        radius = baseRadius * 1.4f, // Increased from 1.2f
-        center = Offset(
-            center.x - baseRadius * 0.1f,
-            center.y - baseRadius * 0.4f
-        )
-    )
 } 
