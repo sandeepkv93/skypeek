@@ -68,100 +68,32 @@ class WeatherWidget5x2Provider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetId: Int
     ) {
-        try {
-            // Immediately show fallback data so widget is never stuck in loading state
-            showFallbackWidget5x2(context, appWidgetManager, appWidgetId)
-            
-            // Then try to get real data via service
-            try {
-                val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
-                    action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
-                    putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
-                    putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_5X2)
-                }
-                context.startService(serviceIntent)
-                // Note: If service succeeds, it will update the widget with real data
-            } catch (e: Exception) {
-                android.util.Log.e("WeatherWidget5x2Provider", "Error starting service for widget $appWidgetId", e)
-                // Fallback data is already shown, so nothing more to do
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("WeatherWidget5x2Provider", "Critical error in updateWidget5x2 for widget $appWidgetId", e)
-            // Show basic error state
-            try {
-                val views = RemoteViews(context.packageName, R.layout.weather_widget_5x2)
-                views.setTextViewText(R.id.widget_city_name, "Error")
-                views.setTextViewText(R.id.widget_temperature, "--°")
-                views.setTextViewText(R.id.widget_condition, "Widget failed")
-                appWidgetManager.updateAppWidget(appWidgetId, views)
-            } catch (fallbackError: Exception) {
-                android.util.Log.e("WeatherWidget5x2Provider", "Even fallback failed", fallbackError)
-            }
+        val views = RemoteViews(context.packageName, R.layout.weather_widget_5x2)
+        
+        // Show loading state initially
+        views.apply {
+            setTextViewText(R.id.widget_city_name, "Loading...")
+            setTextViewText(R.id.widget_temperature, "--°")
+            setTextViewText(R.id.widget_condition, "Updating...")
+            setTextViewText(R.id.widget_high_low, "H:--° L:--°")
+            setTextViewText(R.id.widget_feels_like, "Feels like --°")
+            setTextViewText(R.id.widget_last_updated, "Loading...")
+            setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_cloudy)
         }
-    }
-    
-    private fun showFallbackWidget5x2(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int
-    ) {
-        try {
-            val views = RemoteViews(context.packageName, R.layout.weather_widget_5x2)
-            
-            views.apply {
-                setTextViewText(R.id.widget_city_name, "San Jose")
-                setTextViewText(R.id.widget_temperature, "72°")
-                setTextViewText(R.id.widget_condition, "Partly Cloudy")
-                setTextViewText(R.id.widget_high_low, "H:78° L:65°")
-                setTextViewText(R.id.widget_feels_like, "Feels like 74°")
-                setTextViewText(R.id.widget_last_updated, "Offline mode")
-                setImageViewResource(R.id.widget_weather_icon, R.drawable.ic_partly_cloudy)
-                
-                // Show fallback hourly data
-                setTextViewText(R.id.widget_hour1_time, "Now")
-                setTextViewText(R.id.widget_hour1_temp, "72°")
-                setImageViewResource(R.id.widget_hour1_icon, R.drawable.ic_partly_cloudy)
-                
-                setTextViewText(R.id.widget_hour2_time, "1 PM")
-                setTextViewText(R.id.widget_hour2_temp, "74°")
-                setImageViewResource(R.id.widget_hour2_icon, R.drawable.ic_sunny)
-                
-                setTextViewText(R.id.widget_hour3_time, "2 PM")
-                setTextViewText(R.id.widget_hour3_temp, "76°")
-                setImageViewResource(R.id.widget_hour3_icon, R.drawable.ic_sunny)
-                
-                setTextViewText(R.id.widget_hour4_time, "3 PM")
-                setTextViewText(R.id.widget_hour4_temp, "77°")
-                setImageViewResource(R.id.widget_hour4_icon, R.drawable.ic_sunny)
-                
-                setTextViewText(R.id.widget_hour5_time, "4 PM")
-                setTextViewText(R.id.widget_hour5_temp, "76°")
-                setImageViewResource(R.id.widget_hour5_icon, R.drawable.ic_partly_cloudy)
-                
-                setTextViewText(R.id.widget_hour6_time, "5 PM")
-                setTextViewText(R.id.widget_hour6_temp, "74°")
-                setImageViewResource(R.id.widget_hour6_icon, R.drawable.ic_partly_cloudy)
-                
-                // Tomorrow's forecast
-                setImageViewResource(R.id.widget_tomorrow_icon, R.drawable.ic_sunny)
-                setTextViewText(R.id.widget_tomorrow_high, "80°")
-                setTextViewText(R.id.widget_tomorrow_low, "62°")
-            }
-            
-            setupWidget5x2ClickHandlers(context, views)
-            appWidgetManager.updateAppWidget(appWidgetId, views)
-        } catch (e: Exception) {
-            android.util.Log.e("WeatherWidget5x2Provider", "Error in showFallbackWidget5x2 for widget $appWidgetId", e)
-            // Try ultra-minimal fallback
-            try {
-                val minimalViews = RemoteViews(context.packageName, R.layout.weather_widget_5x2)
-                minimalViews.setTextViewText(R.id.widget_city_name, "Error")
-                minimalViews.setTextViewText(R.id.widget_temperature, "--°")
-                appWidgetManager.updateAppWidget(appWidgetId, minimalViews)
-            } catch (minimalError: Exception) {
-                android.util.Log.e("WeatherWidget5x2Provider", "Even minimal fallback failed", minimalError)
-            }
+        
+        // Set up click handlers
+        setupWidget5x2ClickHandlers(context, views)
+        
+        // Update widget with loading state first
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+        
+        // Start service to fetch real weather data
+        val serviceIntent = Intent(context, WeatherWidgetService::class.java).apply {
+            action = WeatherWidgetService.ACTION_UPDATE_SINGLE_WIDGET
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            putExtra(WeatherWidgetService.EXTRA_WIDGET_TYPE, WeatherWidgetService.WIDGET_TYPE_5X2)
         }
+        context.startService(serviceIntent)
     }
     
     private fun setupWidget5x2ClickHandlers(context: Context, views: RemoteViews) {

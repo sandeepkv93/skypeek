@@ -5,7 +5,8 @@
       "Bash(./gradlew:*)",
       "Bash(adb logcat:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(cloc:*)"
     ],
     "deny": []
   }

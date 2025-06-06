@@ -3,9 +3,7 @@ package com.example.skypeek.di
 import android.content.Context
 import androidx.room.Room
 import com.example.skypeek.BuildConfig
-import com.example.skypeek.data.local.database.LocationDao
-import com.example.skypeek.data.local.database.WeatherDao
-import com.example.skypeek.data.local.database.WeatherDatabase
+import com.example.skypeek.data.local.database.*
 import com.example.skypeek.data.remote.api.OpenMeteoApi
 import com.example.skypeek.data.remote.api.OpenWeatherMapApi
 import com.example.skypeek.data.remote.api.WeatherApiService
@@ -141,11 +139,15 @@ object DatabaseModule {
             WeatherDatabase::class.java,
             WeatherDatabase.DATABASE_NAME
         )
-            .addMigrations(WeatherDatabase.MIGRATION_1_2)
+            .addMigrations(
+                WeatherDatabase.MIGRATION_1_2,
+                WeatherDatabase.MIGRATION_2_3
+            )
             .fallbackToDestructiveMigration()
             .build()
     }
     
+    // Legacy DAOs
     @Provides
     fun provideWeatherDao(database: WeatherDatabase): WeatherDao {
         return database.weatherDao()
@@ -154,5 +156,41 @@ object DatabaseModule {
     @Provides
     fun provideLocationDao(database: WeatherDatabase): LocationDao {
         return database.locationDao()
+    }
+    
+    // New normalized DAOs
+    @Provides
+    fun provideWeatherDataDao(database: WeatherDatabase): WeatherDataDao {
+        return database.weatherDataDao()
+    }
+    
+    @Provides
+    fun provideHourlyForecastDao(database: WeatherDatabase): HourlyForecastDao {
+        return database.hourlyForecastDao()
+    }
+    
+    @Provides
+    fun provideDailyForecastDao(database: WeatherDatabase): DailyForecastDao {
+        return database.dailyForecastDao()
+    }
+    
+    @Provides
+    fun provideWeatherAlertDao(database: WeatherDatabase): WeatherAlertDao {
+        return database.weatherAlertDao()
+    }
+    
+    @Provides
+    fun provideSavedLocationDaoV2(database: WeatherDatabase): SavedLocationDaoV2 {
+        return database.savedLocationDaoV2()
+    }
+    
+    @Provides
+    fun provideCacheMetadataDao(database: WeatherDatabase): CacheMetadataDao {
+        return database.cacheMetadataDao()
+    }
+    
+    @Provides
+    fun provideWeatherCombinedDao(database: WeatherDatabase): WeatherCombinedDao {
+        return database.weatherCombinedDao()
     }
 } 
