@@ -5,8 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Geocoder
 import androidx.core.app.ActivityCompat
-import com.example.skypeek.data.local.database.LocationDao
-import com.example.skypeek.data.local.entities.SavedLocationEntity
+import com.example.skypeek.data.local.database.SavedLocationDaoV2
+import com.example.skypeek.data.local.entities.SavedLocationEntityV2
 import com.example.skypeek.domain.model.LocationData
 import com.example.skypeek.domain.repository.LocationRepository
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -23,7 +23,7 @@ import kotlin.coroutines.resume
 @Singleton
 class LocationRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val locationDao: LocationDao,
+    private val locationDao: SavedLocationDaoV2,
     private val fusedLocationClient: FusedLocationProviderClient,
     private val geocoder: Geocoder
 ) : LocationRepository {
@@ -105,18 +105,20 @@ class LocationRepositoryImpl @Inject constructor(
     override suspend fun saveLocation(location: LocationData) {
         withContext(Dispatchers.IO) {
             try {
-                val entity = SavedLocationEntity(
+                val entity = SavedLocationEntityV2(
                     id = "${location.latitude}_${location.longitude}",
                     latitude = location.latitude,
                     longitude = location.longitude,
                     cityName = location.cityName,
                     country = location.country,
                     isCurrentLocation = location.isCurrentLocation,
-                    order = locationDao.getAllSavedLocations().size
+                    order = (locationDao.getMaxOrder() ?: -1) + 1,
+                    addedAt = System.currentTimeMillis(),
+                    isActive = true
                 )
                 locationDao.insertLocation(entity)
             } catch (e: Exception) {
-                // Handle error
+                throw Exception("Failed to save location: ${e.message}")
             }
         }
     }
@@ -124,18 +126,10 @@ class LocationRepositoryImpl @Inject constructor(
     override suspend fun removeLocation(location: LocationData) {
         withContext(Dispatchers.IO) {
             try {
-                val entity = SavedLocationEntity(
-                    id = "${location.latitude}_${location.longitude}",
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                    cityName = location.cityName,
-                    country = location.country,
-                    isCurrentLocation = location.isCurrentLocation,
-                    order = 0
-                )
-                locationDao.deleteLocation(entity)
+                val locationId = "${location.latitude}_${location.longitude}"
+                locationDao.softDeleteLocation(locationId)
             } catch (e: Exception) {
-                // Handle error
+                throw Exception("Failed to remove location: ${e.message}")
             }
         }
     }
@@ -211,5 +205,26 @@ class LocationRepositoryImpl @Inject constructor(
                     context,
                     Manifest.permission.ACCESS_COARSE_LOCATION
                 ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    suspend fun updateCurrentLocation(location: LocationData) {
+        withContext(Dispatchers.IO) {
+            try {
+                val entity = SavedLocationEntityV2(
+                    id = "${location.latitude}_${location.longitude}",
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    cityName = location.cityName,
+                    country = location.country,
+                    isCurrentLocation = true,
+                    order = 0, // Current location always first
+                    addedAt = System.currentTimeMillis(),
+                    isActive = true
+                )
+                locationDao.updateCurrentLocation(entity)
+            } catch (e: Exception) {
+                throw Exception("Failed to update current location: ${e.message}")
+            }
+        }
     }
 } 

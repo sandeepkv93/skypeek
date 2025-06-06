@@ -237,22 +237,47 @@ class WeatherViewModel @Inject constructor(
     fun addLocation(location: LocationData) {
         viewModelScope.launch {
             val currentLocations = _savedLocations.value.toMutableList()
-            if (!currentLocations.any { it.latitude == location.latitude && it.longitude == location.longitude }) {
+            // Use distance-based duplicate detection instead of exact coordinate match
+            if (!currentLocations.any { isSameLocation(it, location) }) {
                 try {
                     // Save location to database first
                     locationRepository.saveLocation(location)
                     
-                    // Then update UI state
+                    // Only update UI state if database save succeeds
                     currentLocations.add(location)
                     loadWeatherForLocations(currentLocations)
                 } catch (e: Exception) {
-                    // Handle save error - could show user feedback here
-                    // For now, still update UI to prevent confusing behavior
-                    currentLocations.add(location)
-                    loadWeatherForLocations(currentLocations)
+                    // Database save failed - do not update UI to keep consistency
+                    // Could emit an error state here for user feedback
+                    android.util.Log.e("WeatherViewModel", "Failed to save location: ${e.message}")
                 }
             }
         }
+    }
+    
+    /**
+     * Check if two locations are the same within tolerance (100 meters)
+     */
+    private fun isSameLocation(location1: LocationData, location2: LocationData): Boolean {
+        val distance = calculateDistance(
+            location1.latitude, location1.longitude,
+            location2.latitude, location2.longitude
+        )
+        return distance < 100 // 100 meters tolerance
+    }
+    
+    /**
+     * Calculate distance between two coordinates using Haversine formula
+     */
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadius = 6371000.0 // meters
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = kotlin.math.sin(dLat / 2) * kotlin.math.sin(dLat / 2) +
+                kotlin.math.cos(Math.toRadians(lat1)) * kotlin.math.cos(Math.toRadians(lat2)) *
+                kotlin.math.sin(dLon / 2) * kotlin.math.sin(dLon / 2)
+        val c = 2 * kotlin.math.atan2(kotlin.math.sqrt(a), kotlin.math.sqrt(1 - a))
+        return earthRadius * c
     }
 
     /**
@@ -261,32 +286,33 @@ class WeatherViewModel @Inject constructor(
     fun removeLocationAtIndex(index: Int) {
         viewModelScope.launch {
             val currentLocations = _savedLocations.value.toMutableList()
-            if (index < currentLocations.size) {
+            if (index >= 0 && index < currentLocations.size) {
                 val locationToRemove = currentLocations[index]
                 
                 try {
                     // Remove from database first
                     locationRepository.removeLocation(locationToRemove)
-                } catch (e: Exception) {
-                    // Handle removal error - continue with UI update anyway
-                }
-                
-                // Update UI state
-                currentLocations.removeAt(index)
-                
-                if (currentLocations.isEmpty()) {
-                    // Load default location if no locations left
-                    loadDefaultLocation()
-                } else {
-                    loadWeatherForLocations(currentLocations)
                     
-                    // Adjust current index if needed
-                    val currentIndex = _screenState.value.currentLocationIndex
-                    if (currentIndex >= currentLocations.size) {
-                        _screenState.value = _screenState.value.copy(
-                            currentLocationIndex = currentLocations.size - 1
-                        )
+                    // Only update UI state if database removal succeeds
+                    currentLocations.removeAt(index)
+                    
+                    if (currentLocations.isEmpty()) {
+                        // Load default location if no locations left
+                        loadDefaultLocation()
+                    } else {
+                        loadWeatherForLocations(currentLocations)
+                        
+                        // Adjust current index if needed
+                        val currentIndex = _screenState.value.currentLocationIndex
+                        if (currentIndex >= currentLocations.size) {
+                            _screenState.value = _screenState.value.copy(
+                                currentLocationIndex = currentLocations.size - 1
+                            )
+                        }
                     }
+                } catch (e: Exception) {
+                    // Database removal failed - do not update UI to keep consistency
+                    android.util.Log.e("WeatherViewModel", "Failed to remove location: ${e.message}")
                 }
             }
         }

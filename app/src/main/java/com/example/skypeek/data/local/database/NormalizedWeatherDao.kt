@@ -156,6 +156,20 @@ interface SavedLocationDaoV2 {
     
     @Query("DELETE FROM saved_locations_v2 WHERE isActive = 0 AND addedAt < :timestamp")
     suspend fun permanentlyDeleteOldLocations(timestamp: Long)
+    
+    @Query("UPDATE saved_locations_v2 SET isCurrentLocation = 0 WHERE isCurrentLocation = 1 AND isActive = 1")
+    suspend fun clearCurrentLocationFlags()
+    
+    /**
+     * Atomically update current location
+     */
+    @Transaction
+    suspend fun updateCurrentLocation(newCurrentLocation: SavedLocationEntityV2) {
+        // Clear all current location flags
+        clearCurrentLocationFlags()
+        // Insert new current location
+        insertLocation(newCurrentLocation.copy(isCurrentLocation = true))
+    }
 }
 
 @Dao
