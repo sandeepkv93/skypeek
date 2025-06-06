@@ -95,6 +95,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalPermissionsApi::class)
@@ -139,9 +140,23 @@ fun WeatherApp(
         viewModel.setCurrentLocationIndex(pagerState.currentPage)
     }
     
-    LaunchedEffect(screenState.currentLocationIndex) {
-        if (pagerState.currentPage != screenState.currentLocationIndex) {
-            pagerState.animateScrollToPage(screenState.currentLocationIndex)
+    LaunchedEffect(screenState.currentLocationIndex, screenState.shouldSnapToPage) {
+        if (pagerState.currentPage != screenState.currentLocationIndex && 
+            screenState.currentLocationIndex < screenState.weatherStates.size) {
+            
+            if (screenState.shouldSnapToPage) {
+                // Immediate navigation for map button clicks
+                pagerState.scrollToPage(screenState.currentLocationIndex)
+                viewModel.clearSnapToPageFlag()
+            } else {
+                // Smooth animation for other navigation
+                try {
+                    pagerState.animateScrollToPage(screenState.currentLocationIndex)
+                } catch (e: Exception) {
+                    // Fallback to snap if animation fails
+                    pagerState.scrollToPage(screenState.currentLocationIndex)
+                }
+            }
         }
     }
     
@@ -178,7 +193,7 @@ fun WeatherApp(
                                 WeatherScreen(
                                     weatherData = weatherState.weather,
                                     onRefresh = { viewModel.refreshWeatherAtIndex(page) },
-                                    onMapClick = { /* Handle map click */ },
+                                    onMapClick = { viewModel.navigateToCurrentLocation() },
                                     onMenuClick = { viewModel.toggleMenu() }
                                 )
                             }

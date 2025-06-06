@@ -29,5 +29,6 @@ data class WeatherScreenState(
     val currentLocationIndex: Int = 0,
     val isRefreshing: Boolean = false,
     val permissionGranted: Boolean = false,
-    val showLocationDialog: Boolean = false
+    val showLocationDialog: Boolean = false,
+    val shouldSnapToPage: Boolean = false
 ) 

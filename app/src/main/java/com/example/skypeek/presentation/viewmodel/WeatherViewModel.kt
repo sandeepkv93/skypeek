@@ -396,6 +396,30 @@ class WeatherViewModel @Inject constructor(
     fun hideMenu() {
         _showMenu.value = false
     }
+    
+    /**
+     * Navigate to current location (home page)
+     */
+    fun navigateToCurrentLocation() {
+        viewModelScope.launch {
+            val locations = _savedLocations.value
+            val currentLocationIndex = locations.indexOfFirst { it.isCurrentLocation }
+            if (currentLocationIndex != -1) {
+                // Set flag to indicate immediate navigation (snap) and update index
+                _screenState.value = _screenState.value.copy(
+                    currentLocationIndex = currentLocationIndex,
+                    shouldSnapToPage = true
+                )
+            }
+        }
+    }
+    
+    /**
+     * Clear the snap to page flag after navigation completes
+     */
+    fun clearSnapToPageFlag() {
+        _screenState.value = _screenState.value.copy(shouldSnapToPage = false)
+    }
 
     /**
      * Request location permission and update current location
