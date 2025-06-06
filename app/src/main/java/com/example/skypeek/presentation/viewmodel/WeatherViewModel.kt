@@ -30,14 +30,14 @@ class WeatherViewModel @Inject constructor(
     val showMenu: StateFlow<Boolean> = _showMenu.asStateFlow()
 
     init {
-        // Try to get current location first, fallback to default if not available
-        requestCurrentLocationFirst()
+        // ViewModel initialization - location will be requested from MainActivity
+        // Don't load default location immediately, wait for permission result
     }
 
     /**
-     * Try to get current location first, fallback to default location
+     * Initialize app with current location if permission granted, otherwise show loading
      */
-    private fun requestCurrentLocationFirst() {
+    fun initializeWithLocationPermission() {
         viewModelScope.launch {
             // Check if we have location permission
             if (locationRepository.hasLocationPermission()) {
@@ -51,8 +51,11 @@ class WeatherViewModel @Inject constructor(
                     loadDefaultLocation()
                 }
             } else {
-                // No permission, start with default location
-                loadDefaultLocation()
+                // No permission, show initial loading state and wait for permission result
+                _screenState.value = _screenState.value.copy(
+                    weatherStates = listOf(WeatherUiState.Loading),
+                    isRefreshing = false
+                )
             }
         }
     }

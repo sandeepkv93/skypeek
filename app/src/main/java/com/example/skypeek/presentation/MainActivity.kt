@@ -145,17 +145,17 @@ fun WeatherApp(
         }
     }
     
-    // Request location permission on first launch or handle denied permission
+    // Initialize app and request location permission on first launch
     LaunchedEffect(Unit) {
+        // Initialize the ViewModel based on current permission status
+        viewModel.initializeWithLocationPermission()
+        
         if (locationPermissionState.status.isGranted) {
             // Permission already granted, get current location
             onLocationRequest()
-        } else if (screenState.showLocationDialog) {
-            // Only show permission dialog if explicitly requested
-            locationPermissionState.launchPermissionRequest()
         } else {
-            // Permission not granted and dialog not requested, use default location
-            viewModel.loadDefaultLocationAsFallback()
+            // Permission not granted, request it automatically on first launch
+            locationPermissionState.launchPermissionRequest()
         }
     }
     
