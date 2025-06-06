@@ -30,8 +30,28 @@ class WeatherViewModel @Inject constructor(
     val showMenu: StateFlow<Boolean> = _showMenu.asStateFlow()
 
     init {
-        // ViewModel initialization - location will be requested from MainActivity
-        // Don't load default location immediately, wait for permission result
+        // Load saved locations on app startup
+        loadSavedLocations()
+    }
+    
+    /**
+     * Load saved locations from database on app startup
+     */
+    private fun loadSavedLocations() {
+        viewModelScope.launch {
+            try {
+                val savedLocations = locationRepository.getSavedLocations()
+                if (savedLocations.isNotEmpty()) {
+                    loadWeatherForLocations(savedLocations)
+                } else {
+                    // No saved locations, try to initialize with current location
+                    initializeWithLocationPermission()
+                }
+            } catch (e: Exception) {
+                // If loading saved locations fails, fallback to current location
+                initializeWithLocationPermission()
+            }
+        }
     }
 
     /**
@@ -212,25 +232,46 @@ class WeatherViewModel @Inject constructor(
     }
 
     /**
-     * Add a new location
+     * Add a new location and save it to database
      */
     fun addLocation(location: LocationData) {
         viewModelScope.launch {
             val currentLocations = _savedLocations.value.toMutableList()
             if (!currentLocations.any { it.latitude == location.latitude && it.longitude == location.longitude }) {
-                currentLocations.add(location)
-                loadWeatherForLocations(currentLocations)
+                try {
+                    // Save location to database first
+                    locationRepository.saveLocation(location)
+                    
+                    // Then update UI state
+                    currentLocations.add(location)
+                    loadWeatherForLocations(currentLocations)
+                } catch (e: Exception) {
+                    // Handle save error - could show user feedback here
+                    // For now, still update UI to prevent confusing behavior
+                    currentLocations.add(location)
+                    loadWeatherForLocations(currentLocations)
+                }
             }
         }
     }
 
     /**
-     * Remove location at index
+     * Remove location at index and delete from database
      */
     fun removeLocationAtIndex(index: Int) {
         viewModelScope.launch {
             val currentLocations = _savedLocations.value.toMutableList()
             if (index < currentLocations.size) {
+                val locationToRemove = currentLocations[index]
+                
+                try {
+                    // Remove from database first
+                    locationRepository.removeLocation(locationToRemove)
+                } catch (e: Exception) {
+                    // Handle removal error - continue with UI update anyway
+                }
+                
+                // Update UI state
                 currentLocations.removeAt(index)
                 
                 if (currentLocations.isEmpty()) {
@@ -277,8 +318,21 @@ class WeatherViewModel @Inject constructor(
             val currentLocations = _savedLocations.value.toMutableList()
             
             // Remove existing current location and add new one at the beginning
+            val oldCurrentLocations = currentLocations.filter { it.isCurrentLocation }
             currentLocations.removeAll { it.isCurrentLocation }
             currentLocations.add(0, currentLocation)
+            
+            try {
+                // Remove old current locations from database
+                oldCurrentLocations.forEach { oldLocation ->
+                    locationRepository.removeLocation(oldLocation)
+                }
+                
+                // Save new current location to database
+                locationRepository.saveLocation(currentLocation)
+            } catch (e: Exception) {
+                // Handle database error - continue with UI update anyway
+            }
             
             loadWeatherForLocations(currentLocations)
             _screenState.value = _screenState.value.copy(currentLocationIndex = 0)
