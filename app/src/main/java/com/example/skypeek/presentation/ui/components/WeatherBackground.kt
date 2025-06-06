@@ -14,6 +14,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.example.skypeek.domain.model.WeatherType
 import com.example.skypeek.presentation.ui.theme.WeatherColors
+import com.example.skypeek.utils.AnimationPools
+import com.example.skypeek.utils.PooledSnowflake
+import com.example.skypeek.utils.PooledRaindrop
 import kotlinx.coroutines.delay
 import kotlin.math.sin
 import kotlin.random.Random
@@ -50,15 +53,22 @@ private fun SnowfallAnimation(modifier: Modifier = Modifier) {
     val screenWidthPx = with(density) { 400.dp.toPx() } // Approximate screen width
     val screenHeightPx = with(density) { 800.dp.toPx() } // Approximate screen height
     
-    // Create snowflakes with random positions and speeds
+    // Use pooled snowflakes to reduce memory allocations
     val snowflakes = remember {
-        List(15) {
-            SnowflakeState(
-                x = Random.nextFloat() * screenWidthPx,
-                y = Random.nextFloat() * screenHeightPx,
-                speed = Random.nextFloat() * 2f + 1f,
+        List(10) { // Reduced from 15 to 10 for better performance
+            AnimationPools.snowflakePool.acquire().apply {
+                x = Random.nextFloat() * screenWidthPx
+                y = Random.nextFloat() * screenHeightPx
+                speed = Random.nextFloat() * 2f + 1f
                 size = Random.nextFloat() * 3f + 2f
-            )
+            }
+        }
+    }
+    
+    // Release pooled objects when composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            snowflakes.forEach { AnimationPools.snowflakePool.release(it) }
         }
     }
     
@@ -95,14 +105,22 @@ private fun RainAnimation(modifier: Modifier = Modifier) {
     val screenWidthPx = with(density) { 400.dp.toPx() }
     val screenHeightPx = with(density) { 800.dp.toPx() }
     
+    // Use pooled raindrops to reduce memory allocations
     val raindrops = remember {
-        List(25) {
-            RaindropState(
-                x = Random.nextFloat() * screenWidthPx,
-                y = Random.nextFloat() * screenHeightPx,
-                speed = Random.nextFloat() * 8f + 8f,
+        List(20) { // Reduced from 25 to 20 for better performance
+            AnimationPools.raindropPool.acquire().apply {
+                x = Random.nextFloat() * screenWidthPx
+                y = Random.nextFloat() * screenHeightPx
+                speed = Random.nextFloat() * 8f + 8f
                 length = Random.nextFloat() * 20f + 10f
-            )
+            }
+        }
+    }
+    
+    // Release pooled objects when composable is disposed
+    DisposableEffect(Unit) {
+        onDispose {
+            raindrops.forEach { AnimationPools.raindropPool.release(it) }
         }
     }
     
@@ -185,20 +203,6 @@ private fun SunAnimation(modifier: Modifier = Modifier) {
     }
 }
 
-// Helper data classes for animations
-private class SnowflakeState(
-    var x: Float,
-    var y: Float,
-    val speed: Float,
-    val size: Float
-)
-
-private class RaindropState(
-    var x: Float,
-    var y: Float,
-    val speed: Float,
-    val length: Float
-)
 
 private fun getWeatherGradient(weatherType: WeatherType): List<ULong> {
     return when (weatherType) {

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.skypeek.utils.AnimationPools
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.PI
@@ -337,7 +338,7 @@ fun RainyIcon(
             shadowIntensity = 0.25f
         )
         
-        // Reduced rain drops for better performance
+        // Optimized rain drops - reduced allocations
         val rainDrops = listOf(
             Triple(0.2f, 0.55f, 1.0f),   // x, y, size
             Triple(0.5f, 0.6f, 0.9f),
@@ -355,6 +356,7 @@ fun RainyIcon(
             // Create fading effect as drops fall
             val alpha = 1f - (staggeredOffset * 0.3f)
             
+            // Direct offset creation is more efficient for simple drawing
             drawLine(
                 color = Color(0xFF2196F3).copy(alpha = alpha),
                 start = Offset(size.width * x, size.height * animatedY),
@@ -405,7 +407,7 @@ fun SnowyIcon(
             shadowIntensity = 0.15f
         )
         
-        // Reduced snowflakes for better performance
+        // Optimized snowflakes - reduced allocations
         val snowflakes = listOf(
             Triple(0.3f, 0.55f, 1.0f),
             Triple(0.7f, 0.65f, 0.9f)
@@ -419,6 +421,7 @@ fun SnowyIcon(
             // Gentle side-to-side drift
             val drift = sin((snowFall + index) * 2 * PI).toFloat() * 0.02f
             
+            // Direct offset creation is more efficient for simple calculations
             val snowflakeCenter = Offset(
                 size.width * (x + drift),
                 size.height * animatedY
