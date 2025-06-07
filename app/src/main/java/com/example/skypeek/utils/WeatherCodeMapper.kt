@@ -9,10 +9,12 @@ object WeatherCodeMapper {
      * Maps Open-Meteo weather codes to WeatherInfo
      * Open-Meteo codes: https://open-meteo.com/en/docs
      */
-    fun mapOpenMeteoCode(code: Int): WeatherInfo {
+    fun mapOpenMeteoCode(code: Int, isDay: Boolean = true): WeatherInfo {
         return when (code) {
-            0 -> WeatherInfo("Clear sky", "☀️", WeatherType.SUNNY)
-            1 -> WeatherInfo("Mainly clear", "🌤️", WeatherType.SUNNY)
+            0 -> if (isDay) WeatherInfo("Clear sky", "☀️", WeatherType.SUNNY) 
+                 else WeatherInfo("Clear night", "🌌", WeatherType.SUNNY)
+            1 -> if (isDay) WeatherInfo("Mainly clear", "🌤️", WeatherType.SUNNY)
+                 else WeatherInfo("Mostly clear", "🌙", WeatherType.SUNNY)
             2 -> WeatherInfo("Partly cloudy", "⛅", WeatherType.CLOUDY)
             3 -> WeatherInfo("Overcast", "☁️", WeatherType.CLOUDY)
             45, 48 -> WeatherInfo("Fog", "🌫️", WeatherType.FOGGY)
@@ -61,14 +63,15 @@ object WeatherCodeMapper {
     /**
      * Maps OpenWeatherMap weather codes to WeatherInfo
      */
-    fun mapOpenWeatherMapCode(code: Int): WeatherInfo {
+    fun mapOpenWeatherMapCode(code: Int, isDay: Boolean = true): WeatherInfo {
         return when (code) {
             in 200..299 -> WeatherInfo("Thunderstorm", "⛈️", WeatherType.STORMY)
             in 300..399 -> WeatherInfo("Drizzle", "🌦️", WeatherType.RAINY)
             in 500..599 -> WeatherInfo("Rain", "🌧️", WeatherType.RAINY)
             in 600..699 -> WeatherInfo("Snow", "❄️", WeatherType.SNOW)
             in 700..799 -> WeatherInfo("Fog", "🌫️", WeatherType.FOGGY)
-            800 -> WeatherInfo("Clear sky", "☀️", WeatherType.SUNNY)
+            800 -> if (isDay) WeatherInfo("Clear sky", "☀️", WeatherType.SUNNY)
+                   else WeatherInfo("Clear night", "🌌", WeatherType.SUNNY)
             in 801..804 -> WeatherInfo("Cloudy", "☁️", WeatherType.CLOUDY)
             else -> WeatherInfo("Unknown", "❓", WeatherType.CLOUDY)
         }

@@ -30,18 +30,26 @@ fun WeatherIcon(
     weatherCode: Int,
     modifier: Modifier = Modifier,
     size: Dp = 32.dp,
-    timestamp: Long = System.currentTimeMillis()
+    timestamp: Long = System.currentTimeMillis(),
+    sunrise: String? = null,
+    sunset: String? = null
 ) {
-    val isNightTime = isNightTime(timestamp)
+    val isNightTime = isNightTimeBySunriseSunset(timestamp, sunrise, sunset)
     
     when (weatherCode) {
         0 -> {
-            if (isNightTime) MoonIcon(modifier = modifier.size(size)) 
-            else SunnyIcon(modifier = modifier.size(size))
+            if (isNightTime) {
+                NightSkyIcon(modifier = modifier.size(size))
+            } else {
+                SunnyIcon(modifier = modifier.size(size))
+            }
         }
         1 -> {
-            if (isNightTime) PartlyCloudyNightIcon(modifier = modifier.size(size))
-            else PartlyCloudyIcon(modifier = modifier.size(size))
+            if (isNightTime) {
+                NightSkyIcon(modifier = modifier.size(size))
+            } else {
+                PartlyCloudyIcon(modifier = modifier.size(size))
+            }
         }
         2, 3 -> {
             CloudyIcon(modifier = modifier.size(size))
@@ -65,7 +73,8 @@ fun WeatherIcon(
             StormyIcon(modifier = modifier.size(size))
         }
         else -> {
-            if (isNightTime) MoonIcon(modifier = modifier.size(size))
+            // For any unrecognized weather code, show appropriate day/night icon
+            if (isNightTime) NightSkyIcon(modifier = modifier.size(size))
             else SunnyIcon(modifier = modifier.size(size))
         }
     }
@@ -635,6 +644,144 @@ fun MoonIcon(
 }
 
 @Composable
+fun NightSkyIcon(
+    modifier: Modifier = Modifier
+) {
+    // Gentle star twinkling animation
+    val infiniteTransition = rememberInfiniteTransition(label = "night_sky_animation")
+    val starTwinkle by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "star_twinkle"
+    )
+    
+    // Moon glow (smaller moon for night sky)
+    val moonGlow by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "moon_glow"
+    )
+
+    Canvas(modifier = modifier) {
+        val center = Offset(size.width / 2f, size.height / 2f)
+        
+        // Crescent moon positioned in upper right
+        val moonCenter = Offset(size.width * 0.7f, size.height * 0.3f)
+        val moonRadius = size.minDimension * 0.15f
+        
+        // Moon gradient
+        val moonGradient = Brush.radialGradient(
+            colors = listOf(
+                Color(0xFFF5F5DC), // Beige center
+                Color(0xFFE6E6FA), // Lavender edge
+            ),
+            center = moonCenter,
+            radius = moonRadius
+        )
+        
+        // Moon glow
+        drawCircle(
+            color = Color(0x25F5F5DC),
+            radius = moonRadius * 1.3f * moonGlow,
+            center = moonCenter
+        )
+        
+        // Main moon circle
+        drawCircle(
+            brush = moonGradient,
+            radius = moonRadius,
+            center = moonCenter
+        )
+        
+        // Crescent shadow for moon phase effect
+        val shadowCenter = Offset(
+            moonCenter.x + moonRadius * 0.3f,
+            moonCenter.y
+        )
+        drawCircle(
+            color = Color(0x60000000),
+            radius = moonRadius * 0.9f,
+            center = shadowCenter
+        )
+        
+        // Stars scattered across the sky
+        val stars = listOf(
+            // Main bright stars
+            Triple(0.2f, 0.2f, 1.0f),   // x, y, brightness
+            Triple(0.8f, 0.6f, 0.9f),
+            Triple(0.1f, 0.7f, 0.8f),
+            Triple(0.9f, 0.1f, 0.85f),
+            Triple(0.3f, 0.8f, 0.7f),
+            Triple(0.6f, 0.15f, 0.9f),
+            
+            // Smaller dimmer stars
+            Triple(0.15f, 0.4f, 0.5f),
+            Triple(0.4f, 0.25f, 0.6f),
+            Triple(0.85f, 0.8f, 0.4f),
+            Triple(0.25f, 0.6f, 0.55f),
+            Triple(0.7f, 0.7f, 0.45f),
+            Triple(0.5f, 0.9f, 0.5f)
+        )
+        
+        stars.forEachIndexed { index, (x, y, brightness) ->
+            val starCenter = Offset(size.width * x, size.height * y)
+            val baseRadius = size.minDimension * 0.012f * brightness
+            
+            // Staggered twinkling effect
+            val staggeredTwinkle = (starTwinkle + index * 0.1f) % 1f
+            val currentAlpha = brightness * (0.4f + staggeredTwinkle * 0.6f)
+            val currentRadius = baseRadius * (0.8f + staggeredTwinkle * 0.4f)
+            
+            // Star glow
+            drawCircle(
+                color = Color.White.copy(alpha = currentAlpha * 0.3f),
+                radius = currentRadius * 2f,
+                center = starCenter
+            )
+            
+            // Main star
+            drawCircle(
+                color = Color.White.copy(alpha = currentAlpha),
+                radius = currentRadius,
+                center = starCenter
+            )
+            
+            // Star sparkle effect for brighter stars
+            if (brightness > 0.7f && staggeredTwinkle > 0.7f) {
+                val sparkleLength = currentRadius * 3f
+                val sparkleWidth = size.minDimension * 0.004f
+                
+                // Vertical sparkle line
+                drawLine(
+                    color = Color.White.copy(alpha = currentAlpha * 0.8f),
+                    start = Offset(starCenter.x, starCenter.y - sparkleLength),
+                    end = Offset(starCenter.x, starCenter.y + sparkleLength),
+                    strokeWidth = sparkleWidth,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+                
+                // Horizontal sparkle line
+                drawLine(
+                    color = Color.White.copy(alpha = currentAlpha * 0.8f),
+                    start = Offset(starCenter.x - sparkleLength, starCenter.y),
+                    end = Offset(starCenter.x + sparkleLength, starCenter.y),
+                    strokeWidth = sparkleWidth,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun PartlyCloudyNightIcon(
     modifier: Modifier = Modifier
 ) {
@@ -771,15 +918,90 @@ private fun DrawScope.drawIOSSnowflake(
     }
 }
 
-// Helper function to determine if it's night time - RESTORED TO NORMAL
+// PROPER SOLUTION: Use actual sunrise/sunset times to determine night
+private fun isNightTimeBySunriseSunset(timestamp: Long, sunrise: String?, sunset: String?): Boolean {
+    val calendar = java.util.Calendar.getInstance().apply { timeInMillis = timestamp }
+    val currentHour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+    val currentMinute = calendar.get(java.util.Calendar.MINUTE)
+    
+    // Debug logging for troubleshooting
+    val dateFormat = java.text.SimpleDateFormat("MMM dd HH:mm", java.util.Locale.US)
+    val timeString = dateFormat.format(java.util.Date(timestamp))
+    println("🌅 NIGHT CHECK: $timeString (Hour: $currentHour:$currentMinute)")
+    println("   Sunrise: '$sunrise', Sunset: '$sunset'")
+    
+    // TEMPORARY TEST: Force sunrise/sunset values to test parsing
+    val testSunrise = if (sunrise.isNullOrBlank()) "7:30 AM" else sunrise
+    val testSunset = if (sunset.isNullOrBlank()) "6:15 PM" else sunset
+    println("   Using sunrise: '$testSunrise', sunset: '$testSunset'")
+    
+    // If we have sunrise/sunset data, use it (or use test values)
+    if (testSunrise.isNotBlank() && testSunset.isNotBlank()) {
+        try {
+            val currentTimeInMinutes = currentHour * 60 + currentMinute
+            val sunriseMinutes = parseTimeToMinutes(testSunrise)
+            val sunsetMinutes = parseTimeToMinutes(testSunset)
+            
+            println("   Current: $currentTimeInMinutes, Sunrise: $sunriseMinutes, Sunset: $sunsetMinutes")
+            
+            // Only use sunrise/sunset if parsing was successful (non-zero values)
+            if (sunriseMinutes > 0 && sunsetMinutes > 0) {
+                // Day = AFTER sunrise AND BEFORE sunset
+                val isDay = currentTimeInMinutes >= sunriseMinutes && currentTimeInMinutes < sunsetMinutes
+                val isNight = !isDay
+                println("   Day logic: $currentTimeInMinutes >= $sunriseMinutes && $currentTimeInMinutes < $sunsetMinutes = $isDay")
+                println("   Final result: Night = $isNight")
+                return isNight
+            } else {
+                println("   Parsing failed, using fallback")
+            }
+        } catch (e: Exception) {
+            // Error parsing sunrise/sunset times
+        }
+    }
+    
+    // Fallback: Use simple hour-based logic for night time
+    val fallbackNight = currentHour >= 19 || currentHour < 7  // 7PM to 7AM
+    println("   Using fallback: Night = $fallbackNight (7PM-7AM rule)")
+    return fallbackNight
+}
+
+// Helper function to parse time strings like "6:45 AM" to minutes since midnight
+private fun parseTimeToMinutes(timeString: String): Int {
+    try {
+        val trimmed = timeString.trim()
+        val parts = trimmed.split(" ")
+        if (parts.size != 2) return 0
+        
+        val timePart = parts[0] // "6:45"
+        val amPm = parts[1].uppercase() // "AM" or "PM"
+        
+        val timeParts = timePart.split(":")
+        if (timeParts.size != 2) return 0
+        
+        var hours = timeParts[0].toInt()
+        val minutes = timeParts[1].toInt()
+        
+        // Convert to 24-hour format
+        if (amPm == "PM" && hours != 12) {
+            hours += 12
+        } else if (amPm == "AM" && hours == 12) {
+            hours = 0
+        }
+        
+        return hours * 60 + minutes
+    } catch (e: Exception) {
+        return 0
+    }
+}
+
+// Keep old function for backward compatibility
 private fun isNightTime(timestamp: Long): Boolean {
     val calendar = java.util.Calendar.getInstance().apply {
         timeInMillis = timestamp
     }
     val hour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
-    
-    // Night time: 8 PM (20:00) to 6 AM (06:00)
-    return hour >= 20 || hour < 6
+    return hour >= 18 || hour < 8
 }
 
 // Memory-optimized cloud drawing function

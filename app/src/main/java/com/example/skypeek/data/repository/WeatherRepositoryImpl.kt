@@ -185,7 +185,8 @@ class WeatherRepositoryImpl @Inject constructor(
         longitude: Double
     ): WeatherData {
         val current = response.current
-        val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(current.weatherCode)
+        val isDay = isCurrentlyDay()
+        val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(current.weatherCode, isDay)
         
         // Extract today's sunrise and sunset times
         val todaySunrise = response.daily.sunrise?.firstOrNull()?.let { formatSunTime(it) }
@@ -237,22 +238,42 @@ class WeatherRepositoryImpl @Inject constructor(
     }
 
     private fun mapOpenMeteoHourlyForecast(hourly: com.example.skypeek.data.remote.dto.OpenMeteoHourlyForecast): List<HourlyWeather> {
-        // 🔍 DEBUG: Check what hourly weather codes we're getting
-        println("🔍 HOURLY FORECAST DEBUG:")
-        println("   First 10 hourly codes: ${hourly.weatherCode.take(10)}")
+        val currentTime = System.currentTimeMillis()
         
-        return hourly.time.take(24).mapIndexed { index, time ->
-            val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(hourly.weatherCode[index])
+        // 🔍 DEBUG: Check what hourly weather codes and times we're getting
+        println("🔍 HOURLY FORECAST DEBUG:")
+        println("   Total hourly entries: ${hourly.time.size}")
+        println("   All time strings: ${hourly.time}")
+        println("   All hourly codes: ${hourly.weatherCode}")
+        
+        // Process all available hours and filter to get a proper 24-hour window
+        val allHours = hourly.time.mapIndexed { index, time ->
+            val timestamp = parseISODateString(time)
+            // FIXED: Don't determine day/night in repository - let UI handle it with proper sunrise/sunset
+            val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(hourly.weatherCode[index], true) // Always use day version in repository
+            
             HourlyWeather(
                 time = formatHourlyTime(time, index),
                 temperature = hourly.temperature2m[index].toInt(),
                 weatherCode = hourly.weatherCode[index],
-                icon = weatherInfo.icon,
+                icon = weatherInfo.icon, // This will be overridden by UI WeatherIcon component
                 humidity = hourly.relativeHumidity2m[index],
                 windSpeed = hourly.windSpeed10m[index],
-                timestamp = parseISODateString(time)
+                timestamp = timestamp
             )
         }
+        
+        // Find the current hour and show next 24 hours (including future night hours)
+        val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        val startIndex = allHours.indexOfFirst { hour ->
+            val cal = java.util.Calendar.getInstance().apply { timeInMillis = hour.timestamp }
+            cal.get(java.util.Calendar.HOUR_OF_DAY) >= currentHour
+        }.takeIf { it >= 0 } ?: 0
+        
+        println("   📍 Current hour: $currentHour, starting from index: $startIndex")
+        
+        // Take 24 hours starting from current hour (this will include future night hours like tonight's 2 AM)
+        return allHours.drop(startIndex).take(24)
     }
 
     private fun mapOpenMeteoDailyForecast(daily: com.example.skypeek.data.remote.dto.OpenMeteoDailyForecast): List<DailyWeather> {
@@ -261,7 +282,7 @@ class WeatherRepositoryImpl @Inject constructor(
         println("   All daily codes: ${daily.weatherCode}")
         
         return daily.time.mapIndexed { index, date ->
-            val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(daily.weatherCode[index])
+            val weatherInfo = WeatherCodeMapper.mapOpenMeteoCode(daily.weatherCode[index], true) // Daily forecasts use day mode
             DailyWeather(
                 date = date,
                 dayName = formatDayName(date, index),
@@ -277,7 +298,8 @@ class WeatherRepositoryImpl @Inject constructor(
     private fun mapWeatherApiToWeatherData(response: com.example.skypeek.data.remote.api.WeatherApiForecastResponse): WeatherData {
         val current = response.current
         val location = response.location
-        val weatherInfo = WeatherCodeMapper.mapWeatherAPICode(current.condition.code)
+        val isDay = isCurrentlyDay()
+        val weatherInfo = WeatherCodeMapper.mapWeatherAPICode(current.condition.code, isDay)
         
         return WeatherData(
             location = LocationData(
@@ -317,32 +339,45 @@ class WeatherRepositoryImpl @Inject constructor(
         val hourlyList = mutableListOf<HourlyWeather>()
         val currentTime = System.currentTimeMillis()
         
-        forecastDays.take(2).forEach { day ->
+        // Get all hours from multiple days, including past hours to ensure night hours are included
+        forecastDays.take(3).forEach { day ->  // Take 3 days to ensure we get enough hours
             day.hour.forEach { hour ->
                 val hourTime = parseWeatherApiTime(hour.time)
-                if (hourTime >= currentTime && hourlyList.size < 24) {
-                    val weatherInfo = WeatherCodeMapper.mapWeatherAPICode(hour.condition.code)
-                    hourlyList.add(
-                        HourlyWeather(
-                            time = formatHourlyTimeFromTimestamp(hourTime, hourlyList.isEmpty()),
-                            temperature = hour.temp_c.toInt(),
-                            weatherCode = hour.condition.code,
-                            icon = weatherInfo.icon,
-                            humidity = hour.humidity,
-                            windSpeed = hour.wind_kph,
-                            timestamp = hourTime
-                        )
+                // Include ALL hours to ensure night hours are present
+                // FIXED: Don't determine day/night in repository - let UI handle it with proper sunrise/sunset
+                val weatherInfo = WeatherCodeMapper.mapWeatherAPICode(hour.condition.code, true) // Always use day version
+                hourlyList.add(
+                    HourlyWeather(
+                        time = formatHourlyTimeFromTimestamp(hourTime, hourlyList.isEmpty()),
+                        temperature = hour.temp_c.toInt(),
+                        weatherCode = hour.condition.code,
+                        icon = weatherInfo.icon,
+                        humidity = hour.humidity,
+                        windSpeed = hour.wind_kph,
+                        timestamp = hourTime
                     )
-                }
+                )
             }
         }
         
-        return hourlyList.take(24)
+        // Find current hour and show next 24 hours (including future night hours)
+        val currentHour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+        val sortedList = hourlyList.sortedBy { it.timestamp }
+        
+        val startIndex = sortedList.indexOfFirst { hour ->
+            val cal = java.util.Calendar.getInstance().apply { timeInMillis = hour.timestamp }
+            cal.get(java.util.Calendar.HOUR_OF_DAY) >= currentHour
+        }.takeIf { it >= 0 } ?: 0
+        
+        println("   📍 WeatherAPI Current hour: $currentHour, starting from index: $startIndex")
+        
+        // Take 24 hours starting from current hour (this will include tonight's 2 AM)
+        return sortedList.drop(startIndex).take(24)
     }
 
     private fun mapWeatherApiDailyForecast(forecastDays: List<com.example.skypeek.data.remote.api.WeatherApiForecastDay>): List<DailyWeather> {
         return forecastDays.mapIndexed { index, day ->
-            val weatherInfo = WeatherCodeMapper.mapWeatherAPICode(day.day.condition.code)
+            val weatherInfo = WeatherCodeMapper.mapWeatherAPICode(day.day.condition.code, true) // Daily forecasts use day mode
             DailyWeather(
                 date = day.date,
                 dayName = formatDayName(day.date, index),
@@ -361,7 +396,8 @@ class WeatherRepositoryImpl @Inject constructor(
         forecast: com.example.skypeek.data.remote.api.OpenWeatherMapForecastResponse
     ): WeatherData {
         val weather = current.weather.first()
-        val weatherInfo = WeatherCodeMapper.mapOpenWeatherMapCode(weather.id)
+        val isDay = isCurrentlyDay()
+        val weatherInfo = WeatherCodeMapper.mapOpenWeatherMapCode(weather.id, isDay)
         
         return WeatherData(
             location = LocationData(
@@ -400,15 +436,17 @@ class WeatherRepositoryImpl @Inject constructor(
     private fun mapOpenWeatherMapHourlyForecast(forecastList: List<com.example.skypeek.data.remote.api.OWMForecastItem>): List<HourlyWeather> {
         return forecastList.take(24).mapIndexed { index, item ->
             val weather = item.weather.first()
-            val weatherInfo = WeatherCodeMapper.mapOpenWeatherMapCode(weather.id)
+            val timestamp = item.dt * 1000
+            // FIXED: Don't determine day/night in repository - let UI handle it
+            val weatherInfo = WeatherCodeMapper.mapOpenWeatherMapCode(weather.id, true) // Always use day version
             HourlyWeather(
-                time = formatHourlyTimeFromTimestamp(item.dt * 1000, index == 0),
+                time = formatHourlyTimeFromTimestamp(timestamp, index == 0),
                 temperature = item.main.temp.toInt(),
                 weatherCode = weather.id,
                 icon = weatherInfo.icon,
                 humidity = item.main.humidity,
                 windSpeed = item.wind.speed * 3.6, // Convert m/s to km/h
-                timestamp = item.dt * 1000
+                timestamp = timestamp
             )
         }
     }
@@ -423,7 +461,7 @@ class WeatherRepositoryImpl @Inject constructor(
         return dailyMap.entries.take(10).mapIndexed { index, (date, items) ->
             val item = items.first()
             val weather = item.weather.first()
-            val weatherInfo = WeatherCodeMapper.mapOpenWeatherMapCode(weather.id)
+            val weatherInfo = WeatherCodeMapper.mapOpenWeatherMapCode(weather.id, true) // Daily forecasts use day mode
             
             // Calculate high/low from all items for this day
             val highTemp = items.maxOfOrNull { it.main.temp_max }?.toInt() ?: item.main.temp.toInt()
@@ -507,7 +545,7 @@ class WeatherRepositoryImpl @Inject constructor(
                 feelsLike = entity.feelsLike,
                 humidity = entity.humidity,
                 windSpeed = entity.windSpeed,
-                icon = WeatherCodeMapper.mapOpenMeteoCode(entity.weatherCode).icon,
+                icon = WeatherCodeMapper.mapOpenMeteoCode(entity.weatherCode, isCurrentlyDay()).icon,
                 backgroundType = WeatherType.valueOf(entity.backgroundType),
                 description = entity.description,
                 visibility = entity.visibility,
@@ -671,5 +709,21 @@ class WeatherRepositoryImpl @Inject constructor(
             }
             isoTimeString // Return original if parsing fails
         }
+    }
+    
+    private fun isCurrentlyDay(): Boolean {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        // Day time: 8 AM to 6 PM (08:00 to 17:59), Night time: 6 PM (18:00) to 8 AM (07:59)
+        return hour in 8..17
+    }
+    
+    private fun isDayAtTimestamp(timestamp: Long): Boolean {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = timestamp
+        }
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        // Day time: 8 AM to 6 PM (08:00 to 17:59), Night time: 6 PM (18:00) to 8 AM (07:59)
+        return hour in 8..17
     }
 } 

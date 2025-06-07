@@ -62,7 +62,9 @@ fun WeatherScreen(
                 condition = weatherData.currentWeather.condition,
                 highTemp = weatherData.currentWeather.highTemp,
                 lowTemp = weatherData.currentWeather.lowTemp,
-                weatherCode = weatherData.currentWeather.weatherCode
+                weatherCode = weatherData.currentWeather.weatherCode,
+                sunrise = weatherData.currentWeather.sunrise,
+                sunset = weatherData.currentWeather.sunset
             )
             
             Spacer(modifier = Modifier.height(30.dp))
@@ -182,7 +184,9 @@ private fun MainTemperatureDisplay(
     condition: String,
     highTemp: Int,
     lowTemp: Int,
-    weatherCode: Int
+    weatherCode: Int,
+    sunrise: String?,
+    sunset: String?
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
@@ -192,6 +196,8 @@ private fun MainTemperatureDisplay(
             weatherCode = weatherCode,
             size = 120.dp,
             timestamp = System.currentTimeMillis(), // Use current time for proper night detection
+            sunrise = sunrise,
+            sunset = sunset,
             modifier = Modifier.padding(bottom = 20.dp)
         )
         
@@ -346,6 +352,8 @@ private fun HourlyForecastItem(
                     weatherCode = hour.weatherCode,
                     size = 30.dp,
                     timestamp = hour.timestamp,
+                    sunrise = sunriseTime,
+                    sunset = sunsetTime,
                     modifier = Modifier.height(35.dp)
                 )
             }
@@ -439,7 +447,9 @@ private fun DailyForecastRow(
             WeatherIcon(
                 weatherCode = day.weatherCode,
                 size = 28.dp,
-                timestamp = createMiddayTimestamp() // Use midday for daily forecast icons
+                timestamp = createMiddayTimestamp(), // Use midday for daily forecast icons
+                sunrise = null, // Daily forecasts don't need sunset/sunrise logic
+                sunset = null
             )
         }
         
